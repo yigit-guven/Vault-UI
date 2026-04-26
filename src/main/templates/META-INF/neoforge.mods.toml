@@ -10,6 +10,7 @@ logoFile="logo.png"
 displayURL="https://github.com/yigit-guven/Vault-UI"
 issueTrackerURL="https://github.com/yigit-guven/Vault-UI/issues"
 authors="Yigit Guven"
+credits="Special thanks to the Create Team for their mod."
 description='''
 An addon for the Create mod that provides a custom user interface for Vaults.
 '''

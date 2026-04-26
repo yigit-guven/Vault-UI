@@ -1,82 +1,71 @@
-# Create: Vault UI
+<div align="center">
+  <a href="https://github.com/yigit-guven/Vault-UI">
+    <img src="https://raw.githubusercontent.com/yigit-guven/Vault-UI/363106241f88599aadba3ed16e624a2dd54202da/src/main/resources/logo.png" width="128">
+  </a>
+  <h1>Create: Vault UI</h1>
+</div>
 
-A powerful and visually polished NeoForge addon for the **Create mod** that revolutionizes how you interact with **Item Vaults**. No more digging through dozens of chests or scrolling endlessly; Vault UI brings a professional, consolidated, and highly readable interface to your high-capacity storage.
-
----
-
-## ⭐ Key Features
-
-### 📊 Vault Fullness Indicator
-Stay on top of your storage with the new **Dynamic Fullness Bar**. 
-- **Smart Color Gradient**: The bar transitions from **Green** to **Orange** to **Red**, giving you an immediate visual cue when your storage is reaching its limit.
-- **Intelligent Bottleneck Detection**: Our "Smart Simulation" logic accounts for both raw item counts and slot occupancy. The bar correctly hits 100% when no more items can be added, even if the total count is low due to unstackable items.
-
-### 🔍 Deep Storage Analytics
-Hover over the fullness bar to see exactly what's happening inside your vault. The detailed breakdown shows:
-- **Total Fullness %**: An honest percentage that only hits 100% when the vault is truly full.
-- **Items Breakdown**: Total items vs. theoretical capacity.
-- **Slot Usage**: Occupied slots vs. total available slots.
-- **Color-Coded Stats**: Every number in the breakdown shares the bar's color gradient, so you can instantly spot the bottleneck.
-
-### 📶 Persistent Item Sorting
-Organize your vault your way with the new integrated sorting system.
-- **Three Modes**: Toggle between **Most Items**, **A-Z (Mod ID)**, and **Alphabetical** display.
-- **Independent Preferences**: Every player on a server can have their own unique sort mode and theme, which are remembered across sessions.
-- **Instant Organization**: Sorting happens instantly on your client, providing a smooth and responsive experience.
-
-### 📦 Consolidated Item Management
-Tired of seeing 100 different stacks of Cobblestone? Vault UI automatically **aggregates** all identical items into a single slot. You see exactly what you have, and exactly how much, instantly.
-
-### 🔢 High-Density Readability
-Vaults are meant for massive amounts of items, and our UI is built to handle that scale:
-- **Dynamic Count Formatting**: Totals are automatically shortened (e.g., `1,250` → **1.2k**, `1,000,000` → **1.0M**) to prevent text overlap.
-- **Scaled Typography**: Item counts are rendered at 80% size, ensuring that even multi-million totals stay neatly within their slots.
-
-### 🎨 Authentic Vanilla Experience
-We believe mods should feel like a part of the game:
-- **Vanilla Light (Default)**: A pixel-perfect recreation of the classic Minecraft chest UI, featuring sharp corners and the iconic 2-pixel bezel.
-- **Modern Dark**: A sleek dark mode for those using dark-themed resource packs or who simply prefer a modern aesthetic.
-- *Toggle between them effortlessly in the `vault_ui-common.toml` config.*
-
-### 📑 Infinite Scaling with Paging
-Integrated navigation buttons and a clear page indicator allow you to manage thousands of unique item types without cluttering your screen.
-
-### 🛠️ Seamless Create Integration
-Vault UI is designed specifically for **Create**:
-- **Smart Interaction**: Right-clicking opens the UI, but if you're holding a Vault block, the mod stays out of your way so you can still expand your 9x9 or continuous vault structures normally.
+A clean and simple interface for the **Create mod**'s **Item Vaults**. It aggregates all your items into one easy-to-read screen, making it much easier to manage large storage systems.
 
 ---
 
-## 🛠 Requirements & Compatibility
+## ⭐ Features
 
-To use this mod, you **must** have the following installed:
-- **NeoForge**: [Download](https://neoforged.net/)
-- **Minecraft**: 1.21.1
-- **Create Mod**: [CurseForge](https://www.curseforge.com/minecraft/mc-mods/create) / [Modrinth](https://modrinth.com/mod/create)
+### 📊 Fullness Indicator
+A simple bar that shows how much space is left in your vault.
+- **Color Gradient**: Changes from **Green** to **Orange** and **Red** as the vault fills up.
+- **Smart Tracking**: The bar knows when you've run out of slots, even if you have a low item count (important for unstackable items).
+- **Detailed Tooltip**: Hover over the bar to see exactly how many items and slots are being used.
+
+### 📶 Item Sorting
+Organize your items however you prefer.
+- **Three Modes**: Sort by **Most Items**, **Alphabetical**, or **Alphabetical by Mod ID**.
+- **Personalized**: Every player can have their own sorting method, and the mod will remember it for the next time you open a vault.
+- **Instant**: Sorting happens instantly on your screen without any server lag.
+
+### 📦 Consolidated View
+Instead of seeing dozens of separate stacks of the same item, Vault UI merges them all together.
+- **One Slot per Item**: All identical items are grouped into a single slot.
+- **Readable Numbers**: Large counts are automatically shortened (e.g., `1.2k` or `1.5M`) so they don't overlap.
+
+### 🎨 Themes
+- **Vanilla Light**: A pixel-perfect look that matches the standard Minecraft chest UI.
+- **Dark Mode**: A clean dark theme for those who prefer a modern look.
+- **Independent**: You can switch your theme without affecting other players on the server.
+
+---
+
+## 🛠 Installation & Usage
+
+**Requirements:**
+- **Create**
+
+**How to Use:**
+1. **Open UI**: **Right-Click** any part of an Item Vault structure.
+2. **Expand Vaults**: Hold an **Item Vault** block while clicking to expand your vault normally without opening the UI.
+3. **Paging**: Use the arrow buttons on the right to flip through your items.
 
 ---
 
 ## 🔧 Configuration
-
-Tailor the mod to your preference in `.minecraft/config/vault_ui-common.toml`:
+Preferences are saved per-player in `.minecraft/config/vault_ui-client.toml`:
 
 ```toml
-# Whether to use the dark theme for the Vault UI. If false, uses a vanilla-like light theme.
+# Use the dark theme.
 darkMode = false
+
+# Default sorting method (COUNT, NAME_ID, or NAME).
+sortMode = "COUNT"
 ```
 
----
-
-## 🔗 Links & Credits
-
+## 🔗 Links
+- **Modrinth**: [vault-ui](https://modrinth.com/mod/vault-ui)
+- **CurseForge**: [vault-ui](https://www.curseforge.com/minecraft/mc-mods/vault-ui)
 - **GitHub Repository**: [yigit-guven/Vault-UI](https://github.com/yigit-guven/Vault-UI)
-- **Issue Tracker**: [Report Bugs Here](https://github.com/yigit-guven/Vault-UI/issues)
 - **Developer**: [Yigit Guven](https://github.com/yigit-guven)
 
-*Special thanks to the Industrialist mod for inspiring the consolidated viewing logic.*
-
 ---
 
-## 📜 License
+*Special thanks to the Create Team for their mod.*
 
-Distributed under the **LGPL v3** License. See `LICENSE` for more information.
+Distributed under the **LGPL v3** License.
