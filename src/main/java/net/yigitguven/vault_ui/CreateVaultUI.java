@@ -42,7 +42,7 @@ public class CreateVaultUI {
 
         NeoForge.EVENT_BUS.register(this);
 
-        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON, Config.SPEC);
+        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.CLIENT, Config.SPEC);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

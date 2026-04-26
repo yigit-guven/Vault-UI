@@ -27,6 +27,16 @@ public class VaultMenu extends AbstractContainerMenu {
     private long rawCapacity = 0;
     private int occupiedSlots = 0;
     private int totalSlots = 0;
+    private SortMode sortMode = Config.SORT_MODE.get();
+
+    public enum SortMode {
+        COUNT("Most Items"),
+        NAME_ID("A-Z (Mod ID)"),
+        NAME("A-Z");
+
+        public final String label;
+        SortMode(String label) { this.label = label; }
+    }
 
     // Client constructor
     public VaultMenu(int containerId, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf data) {
@@ -72,8 +82,33 @@ public class VaultMenu extends AbstractContainerMenu {
         this.rawCapacity = stats.rawCapacity();
         this.occupiedSlots = stats.occupiedSlots();
         this.totalSlots = stats.totalSlots();
+        resort();
         updateDummyHandler();
     }
+
+    private void resort() {
+        switch (sortMode) {
+            case COUNT -> consolidatedStacks.sort((a, b) -> Integer.compare(b.getCount(), a.getCount()));
+            case NAME_ID -> consolidatedStacks.sort((a, b) -> {
+                String idA = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(a.getItem()).toString();
+                String idB = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(b.getItem()).toString();
+                return idA.compareToIgnoreCase(idB);
+            });
+            case NAME -> consolidatedStacks.sort((a, b) -> {
+                String nameA = a.getHoverName().getString();
+                String nameB = b.getHoverName().getString();
+                return nameA.compareToIgnoreCase(nameB);
+            });
+        }
+    }
+
+    public void setSortMode(SortMode mode) {
+        this.sortMode = mode;
+        resort();
+        updateDummyHandler();
+    }
+
+    public SortMode getSortMode() { return sortMode; }
 
     private void refreshServerData() {
         if (player.level().isClientSide) return;
@@ -128,6 +163,8 @@ public class VaultMenu extends AbstractContainerMenu {
             stack.setCount((int) Math.min(Integer.MAX_VALUE, entry.getValue()));
             consolidatedStacks.add(stack);
         }
+        
+        resort();
         updateDummyHandler();
         
         // Sync to client

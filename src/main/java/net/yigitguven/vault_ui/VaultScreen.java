@@ -42,6 +42,14 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
 
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
+        
+        // Sort Button
+        this.addRenderableWidget(Button.builder(Component.literal("Sort: " + menu.getSortMode().label), (btn) -> {
+            VaultMenu.SortMode next = VaultMenu.SortMode.values()[(menu.getSortMode().ordinal() + 1) % VaultMenu.SortMode.values().length];
+            menu.setSortMode(next);
+            Config.SORT_MODE.set(next);
+            btn.setMessage(Component.literal("Sort: " + next.label));
+        }).pos(this.leftPos + 105, this.topPos + 4).size(90, 14).build());
     }
 
     @Override
