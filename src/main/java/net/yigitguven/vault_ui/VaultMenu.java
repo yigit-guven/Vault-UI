@@ -27,7 +27,7 @@ public class VaultMenu extends AbstractContainerMenu {
     private long rawCapacity = 0;
     private int occupiedSlots = 0;
     private int totalSlots = 0;
-    private SortMode sortMode = Config.SORT_MODE.get();
+    private SortMode sortMode = Config.SORT_MODE != null ? Config.SORT_MODE.get() : SortMode.COUNT;
 
     public enum SortMode {
         COUNT("Most Items"),
