@@ -64,18 +64,20 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         int outlineColor = darkMode ? 0xFF555555 : 0xFF333333;
         int gridBgColor = darkMode ? 0xFF0F0F0F : 0xFF8B8B8B;
         
-        // Main Panel
-        guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, bgColor);
-        guiGraphics.renderOutline(x, y, this.imageWidth, this.imageHeight, outlineColor);
+        // Main Panel with Smoothed Corners
+        guiGraphics.fill(x + 1, y, x + this.imageWidth - 1, y + this.imageHeight, bgColor);
+        guiGraphics.fill(x, y + 1, x + this.imageWidth, y + this.imageHeight - 1, bgColor);
         
         if (!darkMode) {
-            // Vanilla-like 2-pixel bezel
-            guiGraphics.fill(x, y, x + this.imageWidth, y + 2, 0xFFFFFFFF);
-            guiGraphics.fill(x, y, x + 2, y + this.imageHeight, 0xFFFFFFFF);
-            guiGraphics.fill(x + this.imageWidth - 2, y + 2, x + this.imageWidth, y + this.imageHeight, 0xFF555555);
-            guiGraphics.fill(x + 2, y + this.imageHeight - 2, x + this.imageWidth, y + this.imageHeight, 0xFF555555);
-            guiGraphics.fill(x + this.imageWidth - 1, y + 1, x + this.imageWidth, y + this.imageHeight, 0xFF000000);
-            guiGraphics.fill(x + 1, y + this.imageHeight - 1, x + this.imageWidth, y + this.imageHeight, 0xFF000000);
+            // Vanilla-like 2-pixel bezel (Respecting rounded corners)
+            guiGraphics.fill(x + 1, y, x + this.imageWidth - 1, y + 2, 0xFFFFFFFF);
+            guiGraphics.fill(x, y + 1, x + 2, y + this.imageHeight - 1, 0xFFFFFFFF);
+            guiGraphics.fill(x + this.imageWidth - 2, y + 2, x + this.imageWidth - 1, y + this.imageHeight - 1, 0xFF555555);
+            guiGraphics.fill(x + 2, y + this.imageHeight - 2, x + this.imageWidth - 1, y + this.imageHeight - 1, 0xFF555555);
+            guiGraphics.fill(x + this.imageWidth - 1, y + 2, x + this.imageWidth, y + this.imageHeight - 2, 0xFF000000);
+            guiGraphics.fill(x + 2, y + this.imageHeight - 1, x + this.imageWidth - 2, y + this.imageHeight, 0xFF000000);
+        } else {
+            guiGraphics.renderOutline(x, y, this.imageWidth, this.imageHeight, outlineColor);
         }
 
         // Vault Grid Background
@@ -89,10 +91,11 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             }
         }
         
-        // Player Inventory Area
+        // Player Inventory Area (Now uses bgColor to avoid division)
         int invX = x + 7;
         int invY = y + 139;
-        guiGraphics.fill(invX, invY, invX + 162, invY + 76, gridBgColor);
+        int inventoryBg = darkMode ? gridBgColor : bgColor;
+        guiGraphics.fill(invX, invY, invX + 162, invY + 76, inventoryBg);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 drawSlot(guiGraphics, invX + 1 + col * 18, invY + 1 + row * 18, darkMode);
@@ -100,7 +103,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         }
         
         int hotbarY = y + 197;
-        guiGraphics.fill(invX, hotbarY, invX + 162, hotbarY + 18, gridBgColor);
+        guiGraphics.fill(invX, hotbarY, invX + 162, hotbarY + 18, inventoryBg);
         for (int col = 0; col < 9; col++) {
             drawSlot(guiGraphics, invX + 1 + col * 18, hotbarY + 1, darkMode);
         }
@@ -147,8 +150,8 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         boolean darkMode = Config.DARK_MODE.get();
         int titleColor = darkMode ? 0xFFFFFF : 0x404040;
         int invColor = darkMode ? 0xAAAAAA : 0x404040;
-        guiGraphics.drawString(this.font, this.title, 8, 4, titleColor, darkMode);
-        guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, this.inventoryLabelY - 1, invColor, false);
+        guiGraphics.drawString(this.font, this.title, 8, 6, titleColor, darkMode);
+        guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, this.inventoryLabelY + 1, invColor, false);
     }
 
     @Override
