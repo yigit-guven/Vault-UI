@@ -170,9 +170,12 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         // Hover Tooltip for Bar
         if (mouseX >= barX && mouseX < barX + barW && mouseY >= barY && mouseY < barY + barH) {
             java.util.List<net.minecraft.network.chat.Component> tooltip = new java.util.ArrayList<>();
-            tooltip.add(Component.literal("Vault Fullness").withStyle(net.minecraft.ChatFormatting.GOLD));
-            tooltip.add(Component.literal(String.format("Storage: %s / %s", formatCountLarge(this.menu.getRawTotal()), formatCountLarge(this.menu.getRawCapacity()))).withStyle(net.minecraft.ChatFormatting.GRAY));
+            tooltip.add(Component.literal("Vault Storage Status").withStyle(net.minecraft.ChatFormatting.GOLD));
             tooltip.add(Component.literal(String.format("%.1f%% Full", ratio * 100)).withStyle(net.minecraft.ChatFormatting.WHITE));
+            tooltip.add(Component.empty());
+            tooltip.add(Component.literal("Breakdown:").withStyle(net.minecraft.ChatFormatting.GRAY).withStyle(net.minecraft.ChatFormatting.UNDERLINE));
+            tooltip.add(Component.literal(String.format("Items: %s / %s", formatCountLarge(this.menu.getRawTotal()), formatCountLarge(this.menu.getRawCapacity()))).withStyle(net.minecraft.ChatFormatting.GRAY));
+            tooltip.add(Component.literal(String.format("Slots: %d / %d", this.menu.getOccupiedSlots(), this.menu.getTotalSlots())).withStyle(net.minecraft.ChatFormatting.GRAY));
             guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
         }
     }

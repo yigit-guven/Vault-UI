@@ -25,6 +25,8 @@ public class VaultMenu extends AbstractContainerMenu {
     private int capacity = 0;
     private long rawTotal = 0;
     private long rawCapacity = 0;
+    private int occupiedSlots = 0;
+    private int totalSlots = 0;
 
     // Client constructor
     public VaultMenu(int containerId, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf data) {
@@ -62,12 +64,14 @@ public class VaultMenu extends AbstractContainerMenu {
     }
 
     // Called on Client via Packet
-    public void receiveSync(List<ItemStack> items, int barProgress, int barMax, long rawTotal, long rawCapacity) {
+    public void receiveSync(List<ItemStack> items, VaultSyncPayload.VaultStats stats) {
         this.consolidatedStacks = new ArrayList<>(items);
-        this.totalCount = barProgress;
-        this.capacity = barMax;
-        this.rawTotal = rawTotal;
-        this.rawCapacity = rawCapacity;
+        this.totalCount = stats.barProgress();
+        this.capacity = stats.barMax();
+        this.rawTotal = stats.rawTotal();
+        this.rawCapacity = stats.rawCapacity();
+        this.occupiedSlots = stats.occupiedSlots();
+        this.totalSlots = stats.totalSlots();
         updateDummyHandler();
     }
 
@@ -105,6 +109,8 @@ public class VaultMenu extends AbstractContainerMenu {
         // Keep track of the raw counts for the tooltip
         this.rawTotal = currentTotal;
         this.rawCapacity = currentCapacity;
+        this.occupiedSlots = occupiedSlots;
+        this.totalSlots = totalSlots;
         
         for (var entry : totals.entrySet()) {
             ItemStack stack = entry.getKey().stack.copy();
@@ -115,7 +121,8 @@ public class VaultMenu extends AbstractContainerMenu {
         
         // Sync to client
         if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-            PacketDistributor.sendToPlayer(serverPlayer, new VaultSyncPayload(new ArrayList<>(consolidatedStacks), totalCount, capacity, rawTotal, rawCapacity));
+            VaultSyncPayload.VaultStats stats = new VaultSyncPayload.VaultStats(totalCount, capacity, rawTotal, rawCapacity, occupiedSlots, totalSlots);
+            PacketDistributor.sendToPlayer(serverPlayer, new VaultSyncPayload(new ArrayList<>(consolidatedStacks), stats));
         }
     }
 
@@ -156,6 +163,8 @@ public class VaultMenu extends AbstractContainerMenu {
     public int getCapacity() { return capacity; }
     public long getRawTotal() { return rawTotal; }
     public long getRawCapacity() { return rawCapacity; }
+    public int getOccupiedSlots() { return occupiedSlots; }
+    public int getTotalSlots() { return totalSlots; }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
