@@ -8,7 +8,7 @@ version="${mod_version}"
 displayName="${mod_name}"
 authors="Yigit Guven"
 description='''
-Vault UI - An addon for the Create mod that provides a custom user interface for Vaults, enhancing storage management and interaction.
+An addon for the Create mod that provides a custom user interface for Vaults.
 '''
 
 [[dependencies.${mod_id}]]
