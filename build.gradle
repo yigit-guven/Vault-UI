@@ -19,6 +19,9 @@ sourceSets.main.resources {
 }
 
 repositories {
+    maven { url = "https://maven.createmod.net" } // Create
+    maven { url = "https://maven.tterrag.com" } // Registrate
+    maven { url = "https://www.cursemaven.com" } // CurseMaven
 }
 
 base {
@@ -75,6 +78,7 @@ configurations {
 }
 
 dependencies {
+    implementation "com.simibubi.create:create-neoforge-${minecraft_version}:${create_version}"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
