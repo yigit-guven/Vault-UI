@@ -171,7 +171,19 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         if (mouseX >= barX && mouseX < barX + barW && mouseY >= barY && mouseY < barY + barH) {
             java.util.List<net.minecraft.network.chat.Component> tooltip = new java.util.ArrayList<>();
             tooltip.add(Component.literal("Vault Storage Status").withStyle(net.minecraft.ChatFormatting.GOLD));
-            tooltip.add(Component.literal(String.format("%.1f%% Full", ratio * 100)).withStyle(net.minecraft.ChatFormatting.WHITE));
+            
+            String percentStr;
+            if (ratio >= 1.0f) percentStr = "100%";
+            else if (ratio <= 0.0f) percentStr = "0%";
+            else {
+                float percent = ratio * 100.0f;
+                // Clamp to ensure 0% and 100% are special cases
+                if (percent > 99.9f) percent = 99.9f;
+                if (percent < 0.1f) percent = 0.1f;
+                percentStr = String.format("%.1f%%", percent);
+            }
+            
+            tooltip.add(Component.literal(percentStr + " Full").withStyle(net.minecraft.ChatFormatting.WHITE));
             tooltip.add(Component.empty());
             tooltip.add(Component.literal("Breakdown:").withStyle(net.minecraft.ChatFormatting.GRAY).withStyle(net.minecraft.ChatFormatting.UNDERLINE));
             tooltip.add(Component.literal(String.format("Items: %s / %s", formatCountLarge(this.menu.getRawTotal()), formatCountLarge(this.menu.getRawCapacity()))).withStyle(net.minecraft.ChatFormatting.GRAY));
