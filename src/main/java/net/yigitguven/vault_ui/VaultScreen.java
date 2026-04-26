@@ -125,9 +125,22 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             ItemStack stack = slot.getItem();
             guiGraphics.renderItem(stack, slot.x, slot.y);
             
-            String countText = formatCount(stack.getCount());
-            // Pass the formatted text to renderItemDecorations to handle positioning and shadow
-            guiGraphics.renderItemDecorations(this.font, stack, slot.x, slot.y, stack.getCount() > 1 ? countText : null);
+            if (stack.getCount() > 1) {
+                String countText = formatCount(stack.getCount());
+                float scale = 0.8f;
+                guiGraphics.pose().pushPose();
+                guiGraphics.pose().translate(0, 0, 200);
+                guiGraphics.pose().scale(scale, scale, 1.0f);
+                
+                // Position the scaled text in the bottom-right of the 16x16 slot
+                float x = (slot.x + 16) / scale - this.font.width(countText);
+                float y = (slot.y + 16) / scale - 8;
+                
+                guiGraphics.drawString(this.font, countText, (int)x, (int)y, 0xFFFFFF, true);
+                guiGraphics.pose().popPose();
+            }
+            // Use "" instead of null to suppress the default count rendering
+            guiGraphics.renderItemDecorations(this.font, stack, slot.x, slot.y, "");
         } else {
             super.renderSlot(guiGraphics, slot);
         }
