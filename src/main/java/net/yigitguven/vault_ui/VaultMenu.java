@@ -84,25 +84,36 @@ public class VaultMenu extends AbstractContainerMenu {
         long currentCapacity = 0;
         int occupiedSlots = 0;
         int totalSlots = vaultHandler.getSlots();
+        double totalFullnessRatio = 0;
         
         for (int i = 0; i < totalSlots; i++) {
             ItemStack stack = vaultHandler.getStackInSlot(i);
             int limit = vaultHandler.getSlotLimit(i);
             currentCapacity += limit;
+            
             if (!stack.isEmpty()) {
                 ItemKey key = new ItemKey(stack);
                 totals.put(key, totals.getOrDefault(key, 0L) + stack.getCount());
                 currentTotal += stack.getCount();
                 occupiedSlots++;
+                
+                // Dynamic Slot Fullness: How much more of THIS item can fit in THIS slot?
+                ItemStack testStack = stack.copy();
+                testStack.setCount(limit); // Try to fill the slot completely
+                ItemStack remaining = vaultHandler.insertItem(i, testStack, true);
+                int spaceLeft = limit - remaining.getCount();
+                
+                if (spaceLeft <= 0) {
+                    totalFullnessRatio += 1.0;
+                } else {
+                    totalFullnessRatio += (double) stack.getCount() / (stack.getCount() + spaceLeft);
+                }
             }
         }
         
-        // Fullness is the MAXIMUM of item count ratio and slot occupancy ratio
-        double itemRatio = currentCapacity > 0 ? (double) currentTotal / currentCapacity : 0;
-        double slotRatio = totalSlots > 0 ? (double) occupiedSlots / totalSlots : 0;
-        double combinedRatio = Math.max(itemRatio, slotRatio);
+        double combinedRatio = totalSlots > 0 ? totalFullnessRatio / totalSlots : 0;
         
-        // Scale totalCount to represent this combined ratio for the UI bar
+        // Scale totalCount to represent this ratio for the UI bar
         this.totalCount = (int) Math.round(combinedRatio * 10000);
         this.capacity = 10000;
         
