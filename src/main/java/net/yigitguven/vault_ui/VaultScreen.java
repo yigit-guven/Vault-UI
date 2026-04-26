@@ -159,13 +159,13 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         if (mouseX >= barX && mouseX < barX + barW && mouseY >= barY && mouseY < barY + barH) {
             java.util.List<net.minecraft.network.chat.Component> tooltip = new java.util.ArrayList<>();
             tooltip.add(Component.literal("Vault Fullness").withStyle(net.minecraft.ChatFormatting.GOLD));
-            tooltip.add(Component.literal(String.format("Storage: %s / %s", formatCountLarge(total), formatCountLarge(cap))).withStyle(net.minecraft.ChatFormatting.GRAY));
+            tooltip.add(Component.literal(String.format("Storage: %s / %s", formatCountLarge(this.menu.getRawTotal()), formatCountLarge(this.menu.getRawCapacity()))).withStyle(net.minecraft.ChatFormatting.GRAY));
             tooltip.add(Component.literal(String.format("%.1f%% Full", ratio * 100)).withStyle(net.minecraft.ChatFormatting.WHITE));
             guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
         }
     }
 
-    private String formatCountLarge(int count) {
+    private String formatCountLarge(long count) {
         if (count >= 1000000) return String.format("%.2fM", count / 1000000.0);
         if (count >= 1000) return String.format("%.1fk", count / 1000.0);
         return String.valueOf(count);

@@ -31,7 +31,7 @@ public class CreateVaultUIClient {
 
     public static void handleVaultSync(VaultSyncPayload payload, IPayloadContext context) {
         if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.containerMenu instanceof VaultMenu menu) {
-            menu.receiveSync(payload.items(), payload.totalCount(), payload.capacity());
+            menu.receiveSync(payload.items(), payload.barProgress(), payload.barMax(), payload.rawTotal(), payload.rawCapacity());
         }
     }
 }

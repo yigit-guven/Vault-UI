@@ -23,6 +23,8 @@ public class VaultMenu extends AbstractContainerMenu {
     private final Player player;
     private int totalCount = 0;
     private int capacity = 0;
+    private long rawTotal = 0;
+    private long rawCapacity = 0;
 
     // Client constructor
     public VaultMenu(int containerId, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf data) {
@@ -60,10 +62,12 @@ public class VaultMenu extends AbstractContainerMenu {
     }
 
     // Called on Client via Packet
-    public void receiveSync(List<ItemStack> items, int totalCount, int capacity) {
+    public void receiveSync(List<ItemStack> items, int barProgress, int barMax, long rawTotal, long rawCapacity) {
         this.consolidatedStacks = new ArrayList<>(items);
-        this.totalCount = totalCount;
-        this.capacity = capacity;
+        this.totalCount = barProgress;
+        this.capacity = barMax;
+        this.rawTotal = rawTotal;
+        this.rawCapacity = rawCapacity;
         updateDummyHandler();
     }
 
@@ -72,23 +76,35 @@ public class VaultMenu extends AbstractContainerMenu {
 
         consolidatedStacks.clear();
         java.util.Map<ItemKey, Long> totals = new java.util.LinkedHashMap<>();
-        double currentVolume = 0;
-        int currentCapacity = vaultHandler.getSlots() * 64;
+        long currentTotal = 0;
+        long currentCapacity = 0;
+        int occupiedSlots = 0;
+        int totalSlots = vaultHandler.getSlots();
         
-        for (int i = 0; i < vaultHandler.getSlots(); i++) {
+        for (int i = 0; i < totalSlots; i++) {
             ItemStack stack = vaultHandler.getStackInSlot(i);
+            int limit = vaultHandler.getSlotLimit(i);
+            currentCapacity += limit;
             if (!stack.isEmpty()) {
                 ItemKey key = new ItemKey(stack);
                 totals.put(key, totals.getOrDefault(key, 0L) + stack.getCount());
-                
-                // Volume-based fullness: 1 sword = 64 units, 1 ender pearl = 4 units
-                double slotFullness = (double) stack.getCount() / stack.getMaxStackSize();
-                currentVolume += slotFullness;
+                currentTotal += stack.getCount();
+                occupiedSlots++;
             }
         }
-        // Scale volume to 64-based "effective items" for the UI
-        this.totalCount = (int) Math.round(currentVolume * 64);
-        this.capacity = currentCapacity;
+        
+        // Fullness is the MAXIMUM of item count ratio and slot occupancy ratio
+        double itemRatio = currentCapacity > 0 ? (double) currentTotal / currentCapacity : 0;
+        double slotRatio = totalSlots > 0 ? (double) occupiedSlots / totalSlots : 0;
+        double combinedRatio = Math.max(itemRatio, slotRatio);
+        
+        // Scale totalCount to represent this combined ratio for the UI bar
+        this.totalCount = (int) Math.round(combinedRatio * 10000);
+        this.capacity = 10000;
+        
+        // Keep track of the raw counts for the tooltip
+        this.rawTotal = currentTotal;
+        this.rawCapacity = currentCapacity;
         
         for (var entry : totals.entrySet()) {
             ItemStack stack = entry.getKey().stack.copy();
@@ -99,7 +115,7 @@ public class VaultMenu extends AbstractContainerMenu {
         
         // Sync to client
         if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-            PacketDistributor.sendToPlayer(serverPlayer, new VaultSyncPayload(new ArrayList<>(consolidatedStacks), totalCount, capacity));
+            PacketDistributor.sendToPlayer(serverPlayer, new VaultSyncPayload(new ArrayList<>(consolidatedStacks), totalCount, capacity, rawTotal, rawCapacity));
         }
     }
 
@@ -138,6 +154,8 @@ public class VaultMenu extends AbstractContainerMenu {
 
     public int getTotalCount() { return totalCount; }
     public int getCapacity() { return capacity; }
+    public long getRawTotal() { return rawTotal; }
+    public long getRawCapacity() { return rawCapacity; }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
