@@ -6,15 +6,27 @@ A powerful and visually polished NeoForge addon for the **Create mod** that revo
 
 ## ⭐ Key Features
 
+### 📊 Vault Fullness Indicator
+Stay on top of your storage with the new **Dynamic Fullness Bar**. 
+- **Smart Color Gradient**: The bar transitions from **Green** to **Orange** to **Red**, giving you an immediate visual cue when your storage is reaching its limit.
+- **Intelligent Bottleneck Detection**: Our "Smart Simulation" logic accounts for both raw item counts and slot occupancy. The bar correctly hits 100% when no more items can be added, even if the total count is low due to unstackable items.
+
+### 🔍 Deep Storage Analytics
+Hover over the fullness bar to see exactly what's happening inside your vault. The detailed breakdown shows:
+- **Total Fullness %**: An honest percentage that only hits 100% when the vault is truly full.
+- **Items Breakdown**: Total items vs. theoretical capacity.
+- **Slot Usage**: Occupied slots vs. total available slots.
+- **Color-Coded Stats**: Every number in the breakdown shares the bar's color gradient, so you can instantly spot the bottleneck.
+
 ### 📦 Consolidated Item Management
-The core of Vault UI is its ability to **aggregate identical items**. Instead of seeing a vault filled with hundreds of separate 64-item stacks, Vault UI merges them into single, unified slots. You see exactly what you have, and exactly how much, instantly.
+Tired of seeing 100 different stacks of Cobblestone? Vault UI automatically **aggregates** all identical items into a single slot. You see exactly what you have, and exactly how much, instantly.
 
 ### 🔢 High-Density Readability
 Vaults are meant for massive amounts of items, and our UI is built to handle that scale:
 - **Dynamic Count Formatting**: Totals are automatically shortened (e.g., `1,250` → **1.2k**, `1,000,000` → **1.0M**) to prevent text overlap.
 - **Scaled Typography**: Item counts are rendered at 80% size, ensuring that even multi-million totals stay neatly within their slots.
 
-### 🎨 Authentic Vanilla Experience (with a Dark Twist)
+### 🎨 Authentic Vanilla Experience
 We believe mods should feel like a part of the game:
 - **Vanilla Light (Default)**: A pixel-perfect recreation of the classic Minecraft chest UI, featuring sharp corners and the iconic 2-pixel bezel.
 - **Modern Dark**: A sleek dark mode for those using dark-themed resource packs or who simply prefer a modern aesthetic.
