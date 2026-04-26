@@ -147,23 +147,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         fillH = Math.min(barH - 2, fillH);
         
         if (fillH > 0) {
-            int color;
-            if (ratio < 0.5f) {
-                // 0% to 50%: Green (0, 255, 0) to Orange (255, 165, 0)
-                float t = ratio * 2.0f;
-                int r = (int) (255 * t);
-                int g = (int) (255 * (1 - t) + 165 * t);
-                int b = 0;
-                color = 0xFF000000 | (r << 16) | (g << 8) | b;
-            } else {
-                // 50% to 100%: Orange (255, 165, 0) to Red (255, 0, 0)
-                float t = (ratio - 0.5f) * 2.0f;
-                int r = 255;
-                int g = (int) (165 * (1 - t));
-                int b = 0;
-                color = 0xFF000000 | (r << 16) | (g << 8) | b;
-            }
-            
+            int color = getInterpolatedColor(ratio);
             guiGraphics.fill(barX + 1, barY + barH - 1 - fillH, barX + barW - 1, barY + barH - 1, color);
         }
 
@@ -177,18 +161,41 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             else if (ratio <= 0.0f) percentStr = "0%";
             else {
                 float percent = ratio * 100.0f;
-                // Clamp to ensure 0% and 100% are special cases
                 if (percent > 99.9f) percent = 99.9f;
                 if (percent < 0.1f) percent = 0.1f;
                 percentStr = String.format("%.1f%%", percent);
             }
             
-            tooltip.add(Component.literal(percentStr + " Full").withStyle(net.minecraft.ChatFormatting.WHITE));
+            int barColor = getInterpolatedColor(ratio);
+            tooltip.add(Component.literal(percentStr + " Full").withStyle(net.minecraft.network.chat.Style.EMPTY.withColor(barColor)));
             tooltip.add(Component.empty());
             tooltip.add(Component.literal("Breakdown:").withStyle(net.minecraft.ChatFormatting.GRAY).withStyle(net.minecraft.ChatFormatting.UNDERLINE));
-            tooltip.add(Component.literal(String.format("Items: %s / %s", formatCountLarge(this.menu.getRawTotal()), formatCountLarge(this.menu.getRawCapacity()))).withStyle(net.minecraft.ChatFormatting.GRAY));
-            tooltip.add(Component.literal(String.format("Slots: %d / %d", this.menu.getOccupiedSlots(), this.menu.getTotalSlots())).withStyle(net.minecraft.ChatFormatting.GRAY));
+            
+            float itemRatio = this.menu.getRawCapacity() > 0 ? (float) this.menu.getRawTotal() / this.menu.getRawCapacity() : 0;
+            int itemColor = getInterpolatedColor(itemRatio);
+            tooltip.add(Component.literal("Items: ").withStyle(net.minecraft.ChatFormatting.GRAY)
+                .append(Component.literal(String.format("%s / %s", formatCountLarge(this.menu.getRawTotal()), formatCountLarge(this.menu.getRawCapacity()))).withStyle(net.minecraft.network.chat.Style.EMPTY.withColor(itemColor))));
+            
+            float slotRatio = this.menu.getTotalSlots() > 0 ? (float) this.menu.getOccupiedSlots() / this.menu.getTotalSlots() : 0;
+            int slotColor = getInterpolatedColor(slotRatio);
+            tooltip.add(Component.literal("Slots: ").withStyle(net.minecraft.ChatFormatting.GRAY)
+                .append(Component.literal(String.format("%d / %d", this.menu.getOccupiedSlots(), this.menu.getTotalSlots())).withStyle(net.minecraft.network.chat.Style.EMPTY.withColor(slotColor))));
+            
             guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+        }
+    }
+
+    private int getInterpolatedColor(float ratio) {
+        if (ratio < 0.5f) {
+            float t = ratio * 2.0f;
+            int r = (int) (255 * t);
+            int g = (int) (255 * (1 - t) + 165 * t);
+            return 0xFF000000 | (r << 16) | (g << 8);
+        } else {
+            float t = (ratio - 0.5f) * 2.0f;
+            int r = 255;
+            int g = (int) (165 * (1 - t));
+            return 0xFF000000 | (r << 16) | (g << 8);
         }
     }
 
