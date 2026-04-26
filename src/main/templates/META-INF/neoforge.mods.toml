@@ -6,6 +6,8 @@ license="${mod_license}"
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
+displayURL="https://github.com/yigit-guven/Vault-UI"
+issueTrackerURL="https://github.com/yigit-guven/Vault-UI/issues"
 authors="Yigit Guven"
 description='''
 An addon for the Create mod that provides a custom user interface for Vaults.
