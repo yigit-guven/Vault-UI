@@ -57,66 +57,94 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
+        boolean darkMode = Config.DARK_MODE.get();
+        
+        // Background Colors
+        int bgColor = darkMode ? 0xFF181818 : 0xFFC6C6C6;
+        int outlineColor = darkMode ? 0xFF555555 : 0xFF333333;
+        int gridBgColor = darkMode ? 0xFF0F0F0F : 0xFF8B8B8B;
         
         // Main Panel
-        guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xFF181818);
-        guiGraphics.renderOutline(x, y, this.imageWidth, this.imageHeight, 0xFF555555);
+        guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, bgColor);
+        guiGraphics.renderOutline(x, y, this.imageWidth, this.imageHeight, outlineColor);
         
+        if (!darkMode) {
+            // Vanilla-like bezel
+            guiGraphics.fill(x, y, x + this.imageWidth, y + 1, 0xFFFFFFFF);
+            guiGraphics.fill(x, y, x + 1, y + this.imageHeight, 0xFFFFFFFF);
+            guiGraphics.fill(x + this.imageWidth - 1, y, x + this.imageWidth, y + this.imageHeight, 0xFF555555);
+            guiGraphics.fill(x, y + this.imageHeight - 1, x + this.imageWidth, y + this.imageHeight, 0xFF555555);
+        }
+
         // Vault Grid Background
         int gridX = x + 7;
         int gridY = y + 17;
-        guiGraphics.fill(gridX, gridY, gridX + 162, gridY + 108, 0xFF0F0F0F);
+        guiGraphics.fill(gridX, gridY, gridX + 162, gridY + 108, gridBgColor);
         
         for (int row = 0; row < 6; row++) {
             for (int col = 0; col < 9; col++) {
-                drawSlot(guiGraphics, gridX + 1 + col * 18, gridY + 1 + row * 18);
+                drawSlot(guiGraphics, gridX + 1 + col * 18, gridY + 1 + row * 18, darkMode);
             }
         }
         
         // Player Inventory Area
         int invX = x + 7;
         int invY = y + 139;
-        guiGraphics.fill(invX, invY, invX + 162, invY + 76, 0xFF0F0F0F);
+        guiGraphics.fill(invX, invY, invX + 162, invY + 76, gridBgColor);
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                drawSlot(guiGraphics, invX + 1 + col * 18, invY + 1 + row * 18);
+                drawSlot(guiGraphics, invX + 1 + col * 18, invY + 1 + row * 18, darkMode);
             }
         }
         
         int hotbarY = y + 197;
-        guiGraphics.fill(invX, hotbarY, invX + 162, hotbarY + 18, 0xFF0F0F0F);
+        guiGraphics.fill(invX, hotbarY, invX + 162, hotbarY + 18, gridBgColor);
         for (int col = 0; col < 9; col++) {
-            drawSlot(guiGraphics, invX + 1 + col * 18, hotbarY + 1);
+            drawSlot(guiGraphics, invX + 1 + col * 18, hotbarY + 1, darkMode);
         }
 
         // Paging Info Area
         int infoX = x + 175;
         int infoY = y + 67;
-        guiGraphics.fill(infoX, infoY, infoX + 25, infoY + 40, 0xFF0A0A0A);
-        guiGraphics.renderOutline(infoX, infoY, 25, 40, 0xFF333333);
+        int infoBg = darkMode ? 0xFF0A0A0A : 0xFF8B8B8B;
+        guiGraphics.fill(infoX, infoY, infoX + 25, infoY + 40, infoBg);
+        guiGraphics.renderOutline(infoX, infoY, 25, 40, outlineColor);
         
         String pageStr = (this.menu.getCurrentPage() + 1) + "/" + Math.max(1, this.menu.getMaxPages());
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(infoX + 12.5, infoY + 20, 0);
         guiGraphics.pose().scale(0.8f, 0.8f, 1.0f);
-        guiGraphics.drawCenteredString(this.font, "PAGE", 0, -10, 0x777777);
-        guiGraphics.drawCenteredString(this.font, pageStr, 0, 2, 0xFFFF8800);
+        int pageTextColor = darkMode ? 0x777777 : 0x404040;
+        int pageNumColor = darkMode ? 0xFFFF8800 : 0xFF000000;
+        guiGraphics.drawCenteredString(this.font, "PAGE", 0, -10, pageTextColor);
+        guiGraphics.drawCenteredString(this.font, pageStr, 0, 2, pageNumColor);
         guiGraphics.pose().popPose();
     }
 
-    private void drawSlot(GuiGraphics guiGraphics, int x, int y) {
-        guiGraphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF333333);
-        guiGraphics.fill(x, y, x + 16, y + 16, 0xFF181818);
-        guiGraphics.fill(x - 1, y - 1, x + 16, y, 0xFF000000);
-        guiGraphics.fill(x - 1, y - 1, x, y + 16, 0xFF000000);
-        guiGraphics.fill(x + 16, y, x + 17, y + 17, 0xFF555555);
-        guiGraphics.fill(x, y + 16, x + 17, y + 17, 0xFF555555);
+    private void drawSlot(GuiGraphics guiGraphics, int x, int y, boolean darkMode) {
+        if (darkMode) {
+            guiGraphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF333333);
+            guiGraphics.fill(x, y, x + 16, y + 16, 0xFF181818);
+            guiGraphics.fill(x - 1, y - 1, x + 16, y, 0xFF000000);
+            guiGraphics.fill(x - 1, y - 1, x, y + 16, 0xFF000000);
+            guiGraphics.fill(x + 16, y, x + 17, y + 17, 0xFF555555);
+            guiGraphics.fill(x, y + 16, x + 17, y + 17, 0xFF555555);
+        } else {
+            // Vanilla Slot
+            guiGraphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF373737);
+            guiGraphics.fill(x, y, x + 16, y + 16, 0xFF8B8B8B);
+            guiGraphics.fill(x + 16, y - 1, x + 17, y + 17, 0xFFFFFFFF);
+            guiGraphics.fill(x - 1, y + 16, x + 17, y + 17, 0xFFFFFFFF);
+        }
     }
 
     @Override
     public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.font, this.title, 8, 4, 0xFFFFFF, true);
-        guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, this.inventoryLabelY - 1, 0xAAAAAA, false);
+        boolean darkMode = Config.DARK_MODE.get();
+        int titleColor = darkMode ? 0xFFFFFF : 0x404040;
+        int invColor = darkMode ? 0xAAAAAA : 0x404040;
+        guiGraphics.drawString(this.font, this.title, 8, 4, titleColor, darkMode);
+        guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, this.inventoryLabelY - 1, invColor, false);
     }
 
     @Override
