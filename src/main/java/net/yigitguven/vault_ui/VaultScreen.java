@@ -147,10 +147,22 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         fillH = Math.min(barH - 2, fillH);
         
         if (fillH > 0) {
-            // Color interpolation: Green (0, 255, 0) to Red (255, 0, 0)
-            int r = (int) (255 * ratio);
-            int g = (int) (255 * (1 - ratio));
-            int color = 0xFF000000 | (r << 16) | (g << 8);
+            int color;
+            if (ratio < 0.5f) {
+                // 0% to 50%: Green (0, 255, 0) to Orange (255, 165, 0)
+                float t = ratio * 2.0f;
+                int r = (int) (255 * t);
+                int g = (int) (255 * (1 - t) + 165 * t);
+                int b = 0;
+                color = 0xFF000000 | (r << 16) | (g << 8) | b;
+            } else {
+                // 50% to 100%: Orange (255, 165, 0) to Red (255, 0, 0)
+                float t = (ratio - 0.5f) * 2.0f;
+                int r = 255;
+                int g = (int) (165 * (1 - t));
+                int b = 0;
+                color = 0xFF000000 | (r << 16) | (g << 8) | b;
+            }
             
             guiGraphics.fill(barX + 1, barY + barH - 1 - fillH, barX + barW - 1, barY + barH - 1, color);
         }
