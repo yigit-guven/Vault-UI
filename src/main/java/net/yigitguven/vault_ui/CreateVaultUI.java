@@ -17,6 +17,10 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.InteractionResult;
 
 @Mod(CreateVaultUI.MODID)
 public class CreateVaultUI {
@@ -77,14 +81,27 @@ public class CreateVaultUI {
         });
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.HIGHEST)
     public void onVaultInteract(PlayerInteractEvent.RightClickBlock event) {
-        if (event.getLevel().isClientSide) return;
+        if (event.getLevel().isClientSide) {
+            // On client, we just need to signal success if it's a vault to stop other interactions
+            BlockState state = event.getLevel().getBlockState(event.getPos());
+            ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(state.getBlock());
+            if (id.getNamespace().equals("create") && id.getPath().equals("item_vault")) {
+                if (!event.getEntity().isCrouching() && !isVault(event.getEntity().getMainHandItem()) && !isVault(event.getEntity().getOffhandItem())) {
+                    event.setCancellationResult(net.minecraft.world.InteractionResult.SUCCESS);
+                    event.setCanceled(true);
+                }
+            }
+            return;
+        }
         
-        // Allow vault expansion if player is holding a vault
+        // Allow vault expansion if player is holding a vault - check this BEFORE logging
         if (isVault(event.getEntity().getMainHandItem()) || isVault(event.getEntity().getOffhandItem())) {
             return;
         }
+
+        LOGGER.info("Vault interaction triggered by player: {} at {}", event.getEntity().getName().getString(), event.getPos());
 
         net.minecraft.world.level.block.state.BlockState state = event.getLevel().getBlockState(event.getPos());
         net.minecraft.resources.ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(state.getBlock());
@@ -97,6 +114,7 @@ public class CreateVaultUI {
                 net.neoforged.neoforge.items.IItemHandler handler = event.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, event.getPos(), event.getFace());
                 
                 if (handler != null) {
+                    LOGGER.info("Vault capability found, opening menu for {}", event.getEntity().getName().getString());
                     final net.neoforged.neoforge.items.IItemHandler finalHandler = handler;
                     event.getEntity().openMenu(new net.minecraft.world.SimpleMenuProvider(
                         (id1, inventory, player) -> new VaultMenu(id1, inventory, finalHandler),
