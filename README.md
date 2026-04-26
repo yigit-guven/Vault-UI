@@ -18,6 +18,12 @@ Hover over the fullness bar to see exactly what's happening inside your vault. T
 - **Slot Usage**: Occupied slots vs. total available slots.
 - **Color-Coded Stats**: Every number in the breakdown shares the bar's color gradient, so you can instantly spot the bottleneck.
 
+### 📶 Persistent Item Sorting
+Organize your vault your way with the new integrated sorting system.
+- **Three Modes**: Toggle between **Most Items**, **A-Z (Mod ID)**, and **Alphabetical** display.
+- **Independent Preferences**: Every player on a server can have their own unique sort mode and theme, which are remembered across sessions.
+- **Instant Organization**: Sorting happens instantly on your client, providing a smooth and responsive experience.
+
 ### 📦 Consolidated Item Management
 Tired of seeing 100 different stacks of Cobblestone? Vault UI automatically **aggregates** all identical items into a single slot. You see exactly what you have, and exactly how much, instantly.
 

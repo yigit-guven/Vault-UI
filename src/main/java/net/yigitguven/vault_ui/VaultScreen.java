@@ -49,7 +49,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             menu.setSortMode(next);
             Config.SORT_MODE.set(next);
             btn.setMessage(Component.literal("Sort: " + next.label));
-        }).pos(this.leftPos + 105, this.topPos + 4).size(90, 14).build());
+        }).pos(this.leftPos + 132, this.topPos + 4).size(70, 12).build());
     }
 
     @Override
