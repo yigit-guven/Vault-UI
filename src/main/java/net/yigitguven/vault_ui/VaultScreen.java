@@ -64,20 +64,38 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         int outlineColor = darkMode ? 0xFF555555 : 0xFF333333;
         int gridBgColor = darkMode ? 0xFF0F0F0F : 0xFF8B8B8B;
         
-        // Main Panel with Smoothed Corners
-        guiGraphics.fill(x + 1, y, x + this.imageWidth - 1, y + this.imageHeight, bgColor);
-        guiGraphics.fill(x, y + 1, x + this.imageWidth, y + this.imageHeight - 1, bgColor);
+        // Main Panel with 2-pixel Rounded Corners
+        guiGraphics.fill(x + 2, y, x + this.imageWidth - 2, y + this.imageHeight, bgColor);
+        guiGraphics.fill(x + 1, y + 1, x + this.imageWidth - 1, y + this.imageHeight - 1, bgColor);
+        guiGraphics.fill(x, y + 2, x + this.imageWidth, y + this.imageHeight - 2, bgColor);
         
         if (!darkMode) {
-            // Vanilla-like 2-pixel bezel (Respecting rounded corners)
-            guiGraphics.fill(x + 1, y, x + this.imageWidth - 1, y + 2, 0xFFFFFFFF);
-            guiGraphics.fill(x, y + 1, x + 2, y + this.imageHeight - 1, 0xFFFFFFFF);
-            guiGraphics.fill(x + this.imageWidth - 2, y + 2, x + this.imageWidth - 1, y + this.imageHeight - 1, 0xFF555555);
-            guiGraphics.fill(x + 2, y + this.imageHeight - 2, x + this.imageWidth - 1, y + this.imageHeight - 1, 0xFF555555);
-            guiGraphics.fill(x + this.imageWidth - 1, y + 2, x + this.imageWidth, y + this.imageHeight - 2, 0xFF000000);
+            // Vanilla-like 2-pixel bezel (2px Rounded)
+            // Top/Left Highlights (White)
+            guiGraphics.fill(x + 2, y, x + this.imageWidth - 2, y + 1, 0xFFFFFFFF);
+            guiGraphics.fill(x + 1, y + 1, x + this.imageWidth - 1, y + 2, 0xFFFFFFFF);
+            guiGraphics.fill(x, y + 2, x + 1, y + this.imageHeight - 2, 0xFFFFFFFF);
+            guiGraphics.fill(x + 1, y + 1, x + 2, y + this.imageHeight - 1, 0xFFFFFFFF);
+            
+            // Bottom/Right Shadows (Black & Grey)
+            // Outer 1px Bottom/Right (Black)
             guiGraphics.fill(x + 2, y + this.imageHeight - 1, x + this.imageWidth - 2, y + this.imageHeight, 0xFF000000);
+            guiGraphics.fill(x + this.imageWidth - 1, y + 2, x + this.imageWidth, y + this.imageHeight - 2, 0xFF000000);
+            guiGraphics.fill(x + this.imageWidth - 2, y + this.imageHeight - 2, x + this.imageWidth - 1, y + this.imageHeight - 1, 0xFF000000);
+            
+            // Inner 1px Bottom/Right (Grey)
+            guiGraphics.fill(x + 2, y + this.imageHeight - 2, x + this.imageWidth - 2, y + this.imageHeight - 1, 0xFF555555);
+            guiGraphics.fill(x + this.imageWidth - 2, y + 2, x + this.imageWidth - 1, y + this.imageHeight - 2, 0xFF555555);
         } else {
-            guiGraphics.renderOutline(x, y, this.imageWidth, this.imageHeight, outlineColor);
+            // Dark Mode Border (2px Rounded)
+            guiGraphics.fill(x + 2, y, x + this.imageWidth - 2, y + 1, outlineColor);
+            guiGraphics.fill(x + 2, y + this.imageHeight - 1, x + this.imageWidth - 2, y + this.imageHeight, outlineColor);
+            guiGraphics.fill(x, y + 2, x + 1, y + this.imageHeight - 2, outlineColor);
+            guiGraphics.fill(x + this.imageWidth - 1, y + 2, x + this.imageWidth, y + this.imageHeight - 2, outlineColor);
+            guiGraphics.fill(x + 1, y + 1, x + 2, y + 2, outlineColor);
+            guiGraphics.fill(x + this.imageWidth - 2, y + 1, x + this.imageWidth - 1, y + 2, outlineColor);
+            guiGraphics.fill(x + 1, y + this.imageHeight - 2, x + 2, y + this.imageHeight - 1, outlineColor);
+            guiGraphics.fill(x + this.imageWidth - 2, y + this.imageHeight - 2, x + this.imageWidth - 1, y + this.imageHeight - 1, outlineColor);
         }
 
         // Vault Grid Background
