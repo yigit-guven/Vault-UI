@@ -1,3 +1,9 @@
+## [1.0.0-beta3.4] - 2026-04-26
+
+### Fixed
+- **Sorting Desync**: Fixed "wrong item pickup" bug by synchronizing sorting preferences between client and server.
+- **UI Performance**: Throttled vault data refreshes to 1-second intervals to prevent slots from "jumping" while auto-farms are filling the vault.
+
 ## [1.0.0-beta3.3] - 2026-04-26
 
 ### Fixed

@@ -28,6 +28,7 @@ public class VaultMenu extends AbstractContainerMenu {
     private int occupiedSlots = 0;
     private int totalSlots = 0;
     private SortMode sortMode = Config.SORT_MODE != null ? Config.SORT_MODE.get() : SortMode.COUNT;
+    private int tickCount = 0;
 
     public enum SortMode {
         COUNT("Most Items"),
@@ -189,7 +190,9 @@ public class VaultMenu extends AbstractContainerMenu {
     @Override
     public void broadcastChanges() {
         if (!(vaultHandler instanceof ItemStackHandler)) {
-            refreshServerData();
+            if (tickCount++ % 20 == 0) {
+                refreshServerData();
+            }
         }
         super.broadcastChanges();
     }

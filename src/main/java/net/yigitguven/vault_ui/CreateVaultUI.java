@@ -62,6 +62,12 @@ public class CreateVaultUI {
                 CreateVaultUI::handleVaultPage
         );
 
+        registrar.playToServer(
+                VaultSortPayload.TYPE,
+                VaultSortPayload.CODEC,
+                CreateVaultUI::handleVaultSort
+        );
+
         registrar.playToClient(
                 VaultSyncPayload.TYPE,
                 VaultSyncPayload.CODEC,
@@ -77,6 +83,14 @@ public class CreateVaultUI {
         context.enqueueWork(() -> {
             if (context.player().containerMenu instanceof VaultMenu menu) {
                 menu.setPage(payload.page());
+            }
+        });
+    }
+
+    private static void handleVaultSort(VaultSortPayload payload, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (context.player().containerMenu instanceof VaultMenu menu) {
+                menu.setSortMode(payload.sortMode());
             }
         });
     }

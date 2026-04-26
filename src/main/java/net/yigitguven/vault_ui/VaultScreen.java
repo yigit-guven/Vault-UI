@@ -48,6 +48,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             VaultMenu.SortMode next = VaultMenu.SortMode.values()[(menu.getSortMode().ordinal() + 1) % VaultMenu.SortMode.values().length];
             menu.setSortMode(next);
             Config.SORT_MODE.set(next);
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(next));
             btn.setMessage(Component.literal("Sort: " + next.label));
         }).pos(this.leftPos + 132, this.topPos + 4).size(70, 12).build());
     }
