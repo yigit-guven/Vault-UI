@@ -69,11 +69,13 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         guiGraphics.renderOutline(x, y, this.imageWidth, this.imageHeight, outlineColor);
         
         if (!darkMode) {
-            // Vanilla-like bezel
-            guiGraphics.fill(x, y, x + this.imageWidth, y + 1, 0xFFFFFFFF);
-            guiGraphics.fill(x, y, x + 1, y + this.imageHeight, 0xFFFFFFFF);
-            guiGraphics.fill(x + this.imageWidth - 1, y, x + this.imageWidth, y + this.imageHeight, 0xFF555555);
-            guiGraphics.fill(x, y + this.imageHeight - 1, x + this.imageWidth, y + this.imageHeight, 0xFF555555);
+            // Vanilla-like 2-pixel bezel
+            guiGraphics.fill(x, y, x + this.imageWidth, y + 2, 0xFFFFFFFF);
+            guiGraphics.fill(x, y, x + 2, y + this.imageHeight, 0xFFFFFFFF);
+            guiGraphics.fill(x + this.imageWidth - 2, y + 2, x + this.imageWidth, y + this.imageHeight, 0xFF555555);
+            guiGraphics.fill(x + 2, y + this.imageHeight - 2, x + this.imageWidth, y + this.imageHeight, 0xFF555555);
+            guiGraphics.fill(x + this.imageWidth - 1, y + 1, x + this.imageWidth, y + this.imageHeight, 0xFF000000);
+            guiGraphics.fill(x + 1, y + this.imageHeight - 1, x + this.imageWidth, y + this.imageHeight, 0xFF000000);
         }
 
         // Vault Grid Background
@@ -114,8 +116,8 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(infoX + 12.5, infoY + 20, 0);
         guiGraphics.pose().scale(0.8f, 0.8f, 1.0f);
-        int pageTextColor = darkMode ? 0x777777 : 0x404040;
-        int pageNumColor = darkMode ? 0xFFFF8800 : 0xFF000000;
+        int pageTextColor = darkMode ? 0x777777 : 0xFFFFFF;
+        int pageNumColor = darkMode ? 0xFFFF8800 : 0xFFFFFF;
         guiGraphics.drawCenteredString(this.font, "PAGE", 0, -10, pageTextColor);
         guiGraphics.drawCenteredString(this.font, pageStr, 0, 2, pageNumColor);
         guiGraphics.pose().popPose();
@@ -130,11 +132,13 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             guiGraphics.fill(x + 16, y, x + 17, y + 17, 0xFF555555);
             guiGraphics.fill(x, y + 16, x + 17, y + 17, 0xFF555555);
         } else {
-            // Vanilla Slot
-            guiGraphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF373737);
+            // Vanilla Slot (Softer)
+            guiGraphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF8B8B8B);
             guiGraphics.fill(x, y, x + 16, y + 16, 0xFF8B8B8B);
-            guiGraphics.fill(x + 16, y - 1, x + 17, y + 17, 0xFFFFFFFF);
-            guiGraphics.fill(x - 1, y + 16, x + 17, y + 17, 0xFFFFFFFF);
+            guiGraphics.fill(x - 1, y - 1, x + 16, y, 0xFF373737);
+            guiGraphics.fill(x - 1, y - 1, x, y + 16, 0xFF373737);
+            guiGraphics.fill(x + 16, y, x + 17, y + 17, 0xFFFFFFFF);
+            guiGraphics.fill(x, y + 16, x + 17, y + 17, 0xFFFFFFFF);
         }
     }
 
