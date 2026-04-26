@@ -21,6 +21,12 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     @Override
     protected void init() {
         super.init();
+        
+        // Sync current config preference to server immediately on open
+        VaultMenu.SortMode currentSort = Config.SORT_MODE.get();
+        this.menu.setSortMode(currentSort);
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(currentSort));
+
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 

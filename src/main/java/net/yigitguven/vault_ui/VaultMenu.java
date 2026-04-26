@@ -114,7 +114,6 @@ public class VaultMenu extends AbstractContainerMenu {
     private void refreshServerData() {
         if (player.level().isClientSide) return;
 
-        consolidatedStacks.clear();
         java.util.Map<ItemKey, Long> totals = new java.util.LinkedHashMap<>();
         long currentTotal = 0;
         long currentCapacity = 0;
@@ -159,13 +158,42 @@ public class VaultMenu extends AbstractContainerMenu {
         this.occupiedSlots = occupiedSlots;
         this.totalSlots = totalSlots;
         
-        for (var entry : totals.entrySet()) {
-            ItemStack stack = entry.getKey().stack.copy();
-            stack.setCount((int) Math.min(Integer.MAX_VALUE, entry.getValue()));
-            consolidatedStacks.add(stack);
+        if (consolidatedStacks.isEmpty()) {
+            // First load or empty: perform full sort
+            for (var entry : totals.entrySet()) {
+                ItemStack stack = entry.getKey().stack.copy();
+                stack.setCount((int) Math.min(Integer.MAX_VALUE, entry.getValue()));
+                consolidatedStacks.add(stack);
+            }
+            resort();
+        } else {
+            // Stable update: update counts in place, append new items to the end
+            java.util.Set<ItemKey> seenKeys = new java.util.HashSet<>();
+            
+            // 1. Update existing
+            for (int i = 0; i < consolidatedStacks.size(); i++) {
+                ItemStack stack = consolidatedStacks.get(i);
+                ItemKey key = new ItemKey(stack);
+                long count = totals.getOrDefault(key, 0L);
+                stack.setCount((int) Math.min(Integer.MAX_VALUE, count));
+                seenKeys.add(key);
+            }
+            
+            // 2. Add new items to the end (prevents jumping)
+            for (var entry : totals.entrySet()) {
+                if (!seenKeys.contains(entry.getKey())) {
+                    ItemStack newStack = entry.getKey().stack.copy();
+                    newStack.setCount((int) Math.min(Integer.MAX_VALUE, entry.getValue()));
+                    consolidatedStacks.add(newStack);
+                }
+            }
+            
+            // 3. Optional: Remove items that are completely gone?
+            // Actually, keeping them with count 0 until close might be safer for mapping, 
+            // but let's just let them stay or be removed if they are at the end.
+            consolidatedStacks.removeIf(s -> s.getCount() <= 0);
         }
         
-        resort();
         updateDummyHandler();
         
         // Sync to client
