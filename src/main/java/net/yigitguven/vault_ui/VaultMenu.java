@@ -17,6 +17,7 @@ public class VaultMenu extends AbstractContainerMenu {
     private final IItemHandler vaultHandler;
     private final ItemStackHandler dummyHandler = new ItemStackHandler(54);
     private List<ItemStack> consolidatedStacks = new ArrayList<>();
+    private List<ItemStack> filteredStacks = new ArrayList<>();
     private int currentPage = 0;
     private final int slotsPerPage = 54;
 
@@ -27,6 +28,7 @@ public class VaultMenu extends AbstractContainerMenu {
     private long rawCapacity = 0;
     private int occupiedSlots = 0;
     private int totalSlots = 0;
+    private String searchQuery = "";
     private SortMode sortMode = Config.SORT_MODE != null ? Config.SORT_MODE.get() : SortMode.COUNT;
     private int tickCount = 0;
     private String vaultColor = null;
@@ -88,23 +90,29 @@ public class VaultMenu extends AbstractContainerMenu {
         this.rawCapacity = stats.rawCapacity();
         this.occupiedSlots = stats.occupiedSlots();
         this.totalSlots = stats.totalSlots();
+        applySearchFilter();
         resort();
         updateDummyHandler();
     }
 
     private void resort() {
+        java.util.Comparator<ItemStack> comparator = null;
         switch (sortMode) {
-            case COUNT -> consolidatedStacks.sort((a, b) -> Integer.compare(b.getCount(), a.getCount()));
-            case NAME_ID -> consolidatedStacks.sort((a, b) -> {
+            case COUNT -> comparator = (a, b) -> Integer.compare(b.getCount(), a.getCount());
+            case NAME_ID -> comparator = (a, b) -> {
                 String idA = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(a.getItem()).toString();
                 String idB = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(b.getItem()).toString();
                 return idA.compareToIgnoreCase(idB);
-            });
-            case NAME -> consolidatedStacks.sort((a, b) -> {
+            };
+            case NAME -> comparator = (a, b) -> {
                 String nameA = a.getHoverName().getString();
                 String nameB = b.getHoverName().getString();
                 return nameA.compareToIgnoreCase(nameB);
-            });
+            };
+        }
+        if (comparator != null) {
+            consolidatedStacks.sort(comparator);
+            filteredStacks.sort(comparator);
         }
     }
 
@@ -197,6 +205,7 @@ public class VaultMenu extends AbstractContainerMenu {
             // Actually, keeping them with count 0 until close might be safer for mapping, 
             // but let's just let them stay or be removed if they are at the end.
             consolidatedStacks.removeIf(s -> s.getCount() <= 0);
+            applySearchFilter();
             resort();
         }
         
@@ -213,8 +222,8 @@ public class VaultMenu extends AbstractContainerMenu {
         int start = currentPage * slotsPerPage;
         for (int i = 0; i < 54; i++) {
             int index = start + i;
-            if (index < consolidatedStacks.size()) {
-                dummyHandler.setStackInSlot(i, consolidatedStacks.get(index));
+            if (index < filteredStacks.size()) {
+                dummyHandler.setStackInSlot(i, filteredStacks.get(index));
             } else {
                 dummyHandler.setStackInSlot(i, ItemStack.EMPTY);
             }
@@ -241,7 +250,28 @@ public class VaultMenu extends AbstractContainerMenu {
     }
 
     public int getMaxPages() {
-        return (int) Math.ceil((double) (consolidatedStacks.size()) / slotsPerPage);
+        return (int) Math.ceil((double) (filteredStacks.size()) / slotsPerPage);
+    }
+    
+    public void setSearchQuery(String query) {
+        this.searchQuery = query != null ? query.toLowerCase() : "";
+        this.currentPage = 0;
+        applySearchFilter();
+        resort();
+        updateDummyHandler();
+    }
+    
+    private void applySearchFilter() {
+        filteredStacks.clear();
+        if (searchQuery.isEmpty()) {
+            filteredStacks.addAll(consolidatedStacks);
+        } else {
+            for (ItemStack stack : consolidatedStacks) {
+                if (stack.getHoverName().getString().toLowerCase().contains(searchQuery)) {
+                    filteredStacks.add(stack);
+                }
+            }
+        }
     }
 
     public int getTotalCount() { return totalCount; }

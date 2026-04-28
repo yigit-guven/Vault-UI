@@ -74,6 +74,12 @@ public class CreateVaultUI {
                 CreateVaultUI::handleVaultTakeAll
         );
 
+        registrar.playToServer(
+                VaultSearchPayload.TYPE,
+                VaultSearchPayload.CODEC,
+                CreateVaultUI::handleVaultSearch
+        );
+
         registrar.playToClient(
                 VaultSyncPayload.TYPE,
                 VaultSyncPayload.CODEC,
@@ -105,6 +111,14 @@ public class CreateVaultUI {
         context.enqueueWork(() -> {
             if (context.player().containerMenu instanceof VaultMenu menu) {
                 menu.takeAll(context.player(), payload.slotId());
+            }
+        });
+    }
+
+    private static void handleVaultSearch(VaultSearchPayload payload, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (context.player().containerMenu instanceof VaultMenu menu) {
+                menu.setSearchQuery(payload.query());
             }
         });
     }

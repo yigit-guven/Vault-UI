@@ -4,12 +4,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     private Button prevButton;
     private Button nextButton;
+    private EditBox searchBox;
     private long lastClickTime;
     private net.minecraft.world.inventory.Slot lastClickSlot;
 
@@ -59,6 +61,37 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(next));
             btn.setMessage(Component.literal("Sort: " + next.label));
         }).pos(this.leftPos + 132, this.topPos + 4).size(70, 12).build());
+        
+        // Search Box
+        this.searchBox = new EditBox(this.font, this.leftPos + 58, this.topPos + 4, 70, 12, Component.literal("Search"));
+        this.searchBox.setMaxLength(50);
+        this.searchBox.setBordered(true);
+        this.searchBox.setVisible(true);
+        this.searchBox.setTextColor(16777215);
+        this.searchBox.setResponder(query -> {
+            menu.setSearchQuery(query);
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSearchPayload(query));
+        });
+        this.addRenderableWidget(this.searchBox);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.searchBox.isFocused()) {
+            if (keyCode == 256) { // ESC
+                this.searchBox.setFocused(false);
+                return true;
+            }
+            // Let the search box handle other keys, prevent inventory key from closing GUI
+            if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+            // If the key pressed matches the inventory close key, block it from closing the UI
+            if (this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
+                return true;
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

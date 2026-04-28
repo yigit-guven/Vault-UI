@@ -19,11 +19,10 @@ A real-time fullness indicator tracks vault storage capacity.
 - **Smart Tracking**: Accounts for both item counts and slot availability, ensuring accurate status even with unstackable items.
 - **Detailed Stats**: Hover over the fullness bar to view precise item counts and occupied slot data.
 
-### Item Sorting
-Customizable sorting modes allow you to organize items efficiently:
-- **Most Items**: Priority based on quantity.
-- **Alphabetical**: Standard A-Z sorting by display name.
-- **Mod ID**: Group items by their parent mod.
+### Item Searching & Sorting
+Easily locate specific items in massive storage systems:
+- **Search Bar**: Quickly filter visible items by typing their name in the built-in search box.
+- **Custom Sorting**: Sort your items by **Most Items**, **Alphabetical**, or **Mod ID**.
 
 ### Modern Interaction Shortcuts
 - **Shift + Double-Click**: Rapidly transfer all matching items from the vault into your inventory. This shortcut requires holding an item in the cursor to trigger, preventing accidental bulk transfers.
