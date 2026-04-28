@@ -95,15 +95,23 @@ public class CreateVaultUI {
         });
     }
 
+    private boolean isValidVaultType(ResourceLocation id) {
+        String ns = id.getNamespace();
+        String path = id.getPath();
+        boolean validNamespace = ns.equals("create") || ns.contains("vibrant_vaults") || ns.contains("vibrantvaults");
+        boolean validPath = path.contains("vault") || path.contains("shipping_container");
+        return validNamespace && validPath;
+    }
+
     @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.HIGHEST)
     public void onVaultInteract(PlayerInteractEvent.RightClickBlock event) {
         if (event.getLevel().isClientSide) {
             // On client, we just need to signal success if it's a vault to stop other interactions
             BlockState state = event.getLevel().getBlockState(event.getPos());
-            ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(state.getBlock());
-            if (id.getNamespace().equals("create") && id.getPath().equals("item_vault")) {
+            ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+            if (isValidVaultType(id)) {
                 if (!event.getEntity().isCrouching() && !isVault(event.getEntity().getMainHandItem()) && !isVault(event.getEntity().getOffhandItem())) {
-                    event.setCancellationResult(net.minecraft.world.InteractionResult.SUCCESS);
+                    event.setCancellationResult(InteractionResult.SUCCESS);
                     event.setCanceled(true);
                 }
             }
@@ -117,24 +125,24 @@ public class CreateVaultUI {
 
         LOGGER.info("Vault interaction triggered by player: {} at {}", event.getEntity().getName().getString(), event.getPos());
 
-        net.minecraft.world.level.block.state.BlockState state = event.getLevel().getBlockState(event.getPos());
-        net.minecraft.resources.ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(state.getBlock());
-        
-        if (id.getNamespace().equals("create") && id.getPath().equals("item_vault")) {
+        BlockState state = event.getLevel().getBlockState(event.getPos());
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+
+        if (isValidVaultType(id)) {
             if (event.getEntity().isCrouching()) return;
-            
+
             net.minecraft.world.level.block.entity.BlockEntity be = event.getLevel().getBlockEntity(event.getPos());
             if (be != null) {
                 net.neoforged.neoforge.items.IItemHandler handler = event.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, event.getPos(), event.getFace());
-                
+
                 if (handler != null) {
                     LOGGER.info("Vault capability found, opening menu for {}", event.getEntity().getName().getString());
                     final net.neoforged.neoforge.items.IItemHandler finalHandler = handler;
                     event.getEntity().openMenu(new net.minecraft.world.SimpleMenuProvider(
-                        (id1, inventory, player) -> new VaultMenu(id1, inventory, finalHandler),
-                        net.minecraft.network.chat.Component.literal("Item Vault")
+                            (id1, inventory, player) -> new VaultMenu(id1, inventory, finalHandler),
+                            state.getBlock().getName()
                     ), buf -> buf.writeInt(finalHandler.getSlots()));
-                    event.setCancellationResult(net.minecraft.world.InteractionResult.SUCCESS);
+                    event.setCancellationResult(InteractionResult.SUCCESS);
                     event.setCanceled(true);
                 }
             }
@@ -143,7 +151,7 @@ public class CreateVaultUI {
 
     private boolean isVault(net.minecraft.world.item.ItemStack stack) {
         if (stack.isEmpty()) return false;
-        net.minecraft.resources.ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem());
-        return id.getNamespace().equals("create") && id.getPath().equals("item_vault");
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return isValidVaultType(id);
     }
 }

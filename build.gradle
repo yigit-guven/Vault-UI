@@ -79,6 +79,7 @@ configurations {
 
 dependencies {
     implementation "curse.maven:create-328085:${create_version}"
+    runtimeOnly "curse.maven:create-vibrant-vaults-1251719:${vibrant_vaults_version}"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
