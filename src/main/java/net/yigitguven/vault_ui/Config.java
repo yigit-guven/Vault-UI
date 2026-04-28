@@ -19,6 +19,11 @@ public class Config {
             .comment("Whether to use colors from Create: Vibrant Vaults in the UI.")
             .translation("vault_ui.config.vibrantColors")
             .define("vibrantColors", true);
+
+    public static final ModConfigSpec.BooleanValue JEI_SYNC = BUILDER
+            .comment("Whether to sync the Vault UI search bar with JEI/EMI search bar.")
+            .translation("vault_ui.config.jeiSync")
+            .define("jeiSync", true);
     
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

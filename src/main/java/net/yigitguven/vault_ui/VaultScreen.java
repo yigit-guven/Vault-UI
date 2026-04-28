@@ -62,6 +62,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         this.searchBox.setResponder(query -> {
             menu.setSearchQuery(query);
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSearchPayload(query));
+            CompatHelper.syncSearch(query);
         });
         this.addRenderableWidget(this.searchBox);
 

@@ -3,5 +3,6 @@
   "vault_ui.configuration.title": "Vault UI Configs",
   "vault_ui.config.darkMode": "Dark Mode",
   "vault_ui.config.sortMode": "Default Sort Mode",
-  "vault_ui.config.vibrantColors": "Colored Vault UIs"
+  "vault_ui.config.vibrantColors": "Colored Vault UIs",
+  "vault_ui.config.jeiSync": "Sync with JEI/EMI"
 }
