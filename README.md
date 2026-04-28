@@ -35,7 +35,7 @@ Instead of seeing dozens of separate stacks of the same item, Vault UI merges th
 
 ### 🧩 Compatibility
 - **Broad Support**: Designed to work with most Create-styled vault mods. If it uses the standard Item Vault logic and `ItemHandler` capability, Vault UI should be able to handle it!
-- **Create: Vibrant Vaults**: Fully supported, including variants and shipping containers with dynamic titles.
+- [**Create: Vibrant Vaults**](https://www.curseforge.com/minecraft/mc-mods/create-vibrant-vaults): Fully supported, including variants and shipping containers with dynamic titles.
 
 ---
 
