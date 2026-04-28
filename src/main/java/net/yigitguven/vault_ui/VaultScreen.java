@@ -320,7 +320,15 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         boolean darkMode = Config.DARK_MODE.get();
         int titleColor = darkMode ? 0xFFFFFF : 0x404040;
         int invColor = darkMode ? 0xAAAAAA : 0x404040;
-        guiGraphics.drawString(this.font, this.title, 8, 6, titleColor, darkMode);
+
+        // Truncate title if it's too long (over 100 pixels to avoid overlapping search bar)
+        Component displayTitle = this.title;
+        if (this.font.width(this.title) > 102) {
+            String truncated = this.font.plainSubstrByWidth(this.title.getString(), 95);
+            displayTitle = Component.literal(truncated + "...");
+        }
+
+        guiGraphics.drawString(this.font, displayTitle, 8, 6, titleColor, darkMode);
         guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, this.inventoryLabelY + 1, invColor, false);
     }
 
