@@ -63,7 +63,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.hoveredSlot != null && this.hoveredSlot.index < 54 && hasShiftDown() && button == 0) {
+        if (this.hoveredSlot != null && this.hoveredSlot.index < 54 && hasShiftDown() && button == 0 && !this.menu.getCarried().isEmpty()) {
             long time = net.minecraft.Util.getMillis();
             if (time - this.lastClickTime < 250L && this.lastClickSlot == this.hoveredSlot) {
                 net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultTakeAllPayload(this.hoveredSlot.index));
