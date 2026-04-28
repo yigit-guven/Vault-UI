@@ -1,4 +1,6 @@
 {
   "itemGroup.vault_ui": "Vault UI",
-  "vault_ui.configuration.title": "Vault UI Configs"
+  "vault_ui.configuration.title": "Vault UI Configs",
+  "vault_ui.config.darkMode": "Dark Mode",
+  "vault_ui.config.sortMode": "Default Sort Mode"
 }
