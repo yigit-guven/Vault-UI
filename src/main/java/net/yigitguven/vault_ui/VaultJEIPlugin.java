@@ -24,4 +24,8 @@ public class VaultJEIPlugin implements IModPlugin {
             jeiRuntime.getIngredientFilter().setFilterText(text);
         }
     }
+
+    public static String getFilterText() {
+        return jeiRuntime != null ? jeiRuntime.getIngredientFilter().getFilterText() : "";
+    }
 }

@@ -2,7 +2,7 @@
 
 ### Added
 - Search Bar: Added a functional search field to the left of the Sort button to instantly filter the vault's items.
-- Search Sync: Added support for synchronizing the vault's search bar with JEI and EMI (configurable via config).
+- Search Sync: Added support for bidirectional synchronization between the vault's search bar and JEI/EMI (configurable via config).
 
 ### Changed
 - Improved Header Layout: Moved the search bar and sort button to the right to prevent overlapping with vault display names.

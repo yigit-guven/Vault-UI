@@ -26,4 +26,24 @@ public class CompatHelper {
             } catch (Throwable ignored) {}
         }
     }
+
+    public static String getSyncSearch() {
+        if (!Config.JEI_SYNC.get()) return null;
+
+        if (emiLoaded) {
+            try {
+                Class<?> emiApi = Class.forName("dev.emi.emi.api.EmiApi");
+                Method getSearchText = emiApi.getMethod("getSearchText");
+                return (String) getSearchText.invoke(null);
+            } catch (Exception ignored) {}
+        }
+
+        if (jeiLoaded) {
+            try {
+                return VaultJEIPlugin.getFilterText();
+            } catch (Throwable ignored) {}
+        }
+
+        return null;
+    }
 }

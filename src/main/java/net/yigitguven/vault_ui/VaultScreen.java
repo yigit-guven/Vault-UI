@@ -77,6 +77,14 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         }).pos(this.leftPos + 188, this.topPos + 4).size(14, 12).build();
         sortBtn.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal("Sort: " + menu.getSortMode().label)));
         this.addRenderableWidget(sortBtn);
+
+        // Initialize from JEI/EMI
+        if (Config.JEI_SYNC.get()) {
+            String syncQuery = CompatHelper.getSyncSearch();
+            if (syncQuery != null && !syncQuery.isEmpty()) {
+                this.searchBox.setValue(syncQuery);
+            }
+        }
     }
 
     private Component getSortIcon(VaultMenu.SortMode mode) {
@@ -118,6 +126,18 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             this.lastClickSlot = this.hoveredSlot;
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public void containerTick() {
+        super.containerTick();
+        if (Config.JEI_SYNC.get() && this.searchBox != null) {
+            String syncQuery = CompatHelper.getSyncSearch();
+            if (syncQuery != null && !syncQuery.equals(this.searchBox.getValue()) && !this.searchBox.isFocused()) {
+                this.searchBox.setValue(syncQuery);
+                // The responder will handle updating the menu and server
+            }
+        }
     }
 
     @Override
