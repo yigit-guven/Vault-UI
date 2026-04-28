@@ -1,8 +1,4 @@
-## [1.0.0-beta4] - 2026-04-28
-
-### Added
-- Compatibility with **Create: Vibrant Vaults** mod.
-- Dynamic vault UI titles based on the actual block's name.
+## [1.0.0-beta5] - 2026-04-28
 
 ### Fixed
-- Hardcoded "Item Vault" title in the menu.
+- Critical visual desync where items would not match their visual slots when clicked, particularly after extracting items in sorted views.

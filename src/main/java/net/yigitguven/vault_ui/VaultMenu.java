@@ -192,6 +192,7 @@ public class VaultMenu extends AbstractContainerMenu {
             // Actually, keeping them with count 0 until close might be safer for mapping, 
             // but let's just let them stay or be removed if they are at the end.
             consolidatedStacks.removeIf(s -> s.getCount() <= 0);
+            resort();
         }
         
         updateDummyHandler();
