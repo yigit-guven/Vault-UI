@@ -40,7 +40,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
                 this.menu.setPage(page);
                 net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultPagePayload(page));
             }
-        }).bounds(x + 175, y + 17, 25, 20).build();
+        }).bounds(x + 177, y + 17, 25, 20).build();
 
         this.nextButton = Button.builder(Component.literal(">"), (btn) -> {
             int page = this.menu.getCurrentPage() + 1;
@@ -48,13 +48,13 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
                 this.menu.setPage(page);
                 net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultPagePayload(page));
             }
-        }).bounds(x + 175, y + 42, 25, 20).build();
+        }).bounds(x + 177, y + 42, 25, 20).build();
 
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
         
         // Search Box (Moved to right, aligned with below elements)
-        this.searchBox = new EditBox(this.font, this.leftPos + 112, this.topPos + 4, 70, 12, Component.literal("Search"));
+        this.searchBox = new EditBox(this.font, this.leftPos + 117, this.topPos + 4, 70, 12, Component.literal("Search"));
         this.searchBox.setMaxLength(50);
         this.searchBox.setBordered(true);
         this.searchBox.setVisible(true);
@@ -65,7 +65,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         });
         this.addRenderableWidget(this.searchBox);
 
-        // Sort Button (Square Icon, aligned to x+200 right edge)
+        // Sort Button (Square Icon, aligned to x+202 right edge)
         Button sortBtn = Button.builder(getSortIcon(menu.getSortMode()), (btn) -> {
             VaultMenu.SortMode next = VaultMenu.SortMode.values()[(menu.getSortMode().ordinal() + 1) % VaultMenu.SortMode.values().length];
             menu.setSortMode(next);
@@ -73,7 +73,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(next));
             btn.setMessage(getSortIcon(next));
             btn.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal("Sort: " + next.label)));
-        }).pos(this.leftPos + 186, this.topPos + 4).size(14, 12).build();
+        }).pos(this.leftPos + 188, this.topPos + 4).size(14, 12).build();
         sortBtn.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal("Sort: " + menu.getSortMode().label)));
         this.addRenderableWidget(sortBtn);
     }
@@ -205,7 +205,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         }
 
         // Paging Info Area
-        int infoX = x + 175;
+        int infoX = x + 177;
         int infoY = y + 67;
         int infoBg = darkMode ? 0xFF0A0A0A : 0xFF8B8B8B;
         guiGraphics.fill(infoX, infoY, infoX + 25, infoY + 40, infoBg);
@@ -222,7 +222,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         guiGraphics.pose().popPose();
 
         // Fullness Indicator Bar
-        int barX = x + 175;
+        int barX = x + 177;
         int barY = y + 115;
         int barW = 25;
         int barH = 100;
