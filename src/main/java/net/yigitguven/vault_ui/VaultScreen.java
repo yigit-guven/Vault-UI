@@ -53,8 +53,8 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
         
-        // Search Box (Moved to right)
-        this.searchBox = new EditBox(this.font, this.leftPos + 115, this.topPos + 4, 70, 12, Component.literal("Search"));
+        // Search Box (Moved to right, aligned with below elements)
+        this.searchBox = new EditBox(this.font, this.leftPos + 112, this.topPos + 4, 70, 12, Component.literal("Search"));
         this.searchBox.setMaxLength(50);
         this.searchBox.setBordered(true);
         this.searchBox.setVisible(true);
@@ -65,7 +65,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         });
         this.addRenderableWidget(this.searchBox);
 
-        // Sort Button (Square Icon to the right of search)
+        // Sort Button (Square Icon, aligned to x+200 right edge)
         Button sortBtn = Button.builder(getSortIcon(menu.getSortMode()), (btn) -> {
             VaultMenu.SortMode next = VaultMenu.SortMode.values()[(menu.getSortMode().ordinal() + 1) % VaultMenu.SortMode.values().length];
             menu.setSortMode(next);
@@ -73,7 +73,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(next));
             btn.setMessage(getSortIcon(next));
             btn.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal("Sort: " + next.label)));
-        }).pos(this.leftPos + 189, this.topPos + 4).size(14, 12).build();
+        }).pos(this.leftPos + 186, this.topPos + 4).size(14, 12).build();
         sortBtn.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal("Sort: " + menu.getSortMode().label)));
         this.addRenderableWidget(sortBtn);
     }
