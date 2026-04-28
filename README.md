@@ -22,6 +22,7 @@ A real-time fullness indicator tracks vault storage capacity.
 ### Item Searching & Sorting
 Easily locate specific items in massive storage systems:
 - **Search Bar**: Quickly filter visible items by typing their name in the built-in search box.
+- **Recipe Viewer Sync**: Bidirectional search synchronization with [**JEI**](https://www.curseforge.com/minecraft/mc-mods/jei) and [**EMI**](https://www.curseforge.com/minecraft/mc-mods/emi). Typing in one updates the other automatically.
 - **Custom Sorting**: Sort your items by **Most Items**, **Alphabetical**, or **Mod ID**.
 
 ### Modern Interaction Shortcuts
@@ -35,6 +36,7 @@ Easily locate specific items in massive storage systems:
 ## Compatibility
 Vault UI is designed to work with the standard Create Item Vault system and its internal `ItemHandler` logic.
 - [**Create: Vibrant Vaults**](https://www.curseforge.com/minecraft/mc-mods/create-vibrant-vaults): Fully supported with dynamic UI color matching and variant detection.
+- [**JEI**](https://www.curseforge.com/minecraft/mc-mods/jei) / [**EMI**](https://www.curseforge.com/minecraft/mc-mods/emi): Bidirectional search synchronization supported for a seamless crafting and storage experience.
 - **General Support**: Works with most mods that extend Create's vault system or utilize standard vault capabilities.
 
 ---
@@ -63,6 +65,9 @@ sortMode = "COUNT"
 
 # Enable colored UI backgrounds for Vibrant Vaults.
 vibrantColors = true
+
+# Sync search bar with JEI/EMI.
+jeiSync = true
 ```
 
 ---
