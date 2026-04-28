@@ -23,7 +23,7 @@ A real-time fullness indicator tracks vault storage capacity.
 Easily locate specific items in massive storage systems:
 - **Search Bar**: Quickly filter visible items by typing their name in the built-in search box.
 - **Recipe Viewer Sync**: Bidirectional search synchronization with [**JEI**](https://www.curseforge.com/minecraft/mc-mods/jei) and [**EMI**](https://www.curseforge.com/minecraft/mc-mods/emi). Typing in one updates the other automatically.
-- **Custom Sorting**: Sort your items by **Most Items**, **Alphabetical**, or **Mod ID**.
+- **Custom Sorting**: Sort your items by **Most Items**, **Last Edited**, **Alphabetical**, or **Mod ID**.
 
 ### Modern Interaction Shortcuts
 - **Shift + Double-Click**: Rapidly transfer all matching items from the vault into your inventory. This shortcut requires holding an item in the cursor to trigger, preventing accidental bulk transfers.
@@ -60,7 +60,7 @@ Client-side preferences are stored in `config/vault_ui-client.toml`:
 # Use the dark theme.
 darkMode = false
 
-# Default sorting method (COUNT, NAME_ID, or NAME).
+# Default sorting method (COUNT, LAST_EDITED, NAME_ID, or NAME).
 sortMode = "COUNT"
 
 # Enable colored UI backgrounds for Vibrant Vaults.
