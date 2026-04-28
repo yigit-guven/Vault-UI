@@ -272,6 +272,30 @@ public class VaultMenu extends AbstractContainerMenu {
         return ItemStack.EMPTY;
     }
 
+    public void takeAll(Player player, int slotId) {
+        if (slotId >= 0 && slotId < 54) {
+            ItemStack stackInSlot = dummyHandler.getStackInSlot(slotId);
+            if (!stackInSlot.isEmpty()) {
+                ItemStack template = stackInSlot.copy();
+                
+                while (true) {
+                    int toTake = template.getMaxStackSize();
+                    ItemStack withdrawn = withdrawFromVault(template, toTake);
+                    
+                    if (withdrawn.isEmpty()) break;
+                    
+                    if (!this.moveItemStackTo(withdrawn, 54, this.slots.size(), true)) {
+                        if (!withdrawn.isEmpty()) {
+                            insertIntoVault(withdrawn);
+                        }
+                        break;
+                    }
+                }
+                if (!(vaultHandler instanceof ItemStackHandler)) refreshServerData();
+            }
+        }
+    }
+
     private ItemStack insertIntoVault(ItemStack stack) {
         if (stack.isEmpty()) return stack;
         return ItemHandlerHelper.insertItemStacked(vaultHandler, stack, false);

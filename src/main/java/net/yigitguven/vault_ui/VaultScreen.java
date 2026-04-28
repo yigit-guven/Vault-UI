@@ -10,6 +10,8 @@ import net.minecraft.world.item.ItemStack;
 public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     private Button prevButton;
     private Button nextButton;
+    private long lastClickTime;
+    private net.minecraft.world.inventory.Slot lastClickSlot;
 
     public VaultScreen(VaultMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -57,6 +59,20 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(next));
             btn.setMessage(Component.literal("Sort: " + next.label));
         }).pos(this.leftPos + 132, this.topPos + 4).size(70, 12).build());
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.hoveredSlot != null && this.hoveredSlot.index < 54 && hasShiftDown() && button == 0) {
+            long time = net.minecraft.Util.getMillis();
+            if (time - this.lastClickTime < 250L && this.lastClickSlot == this.hoveredSlot) {
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultTakeAllPayload(this.hoveredSlot.index));
+                return true;
+            }
+            this.lastClickTime = time;
+            this.lastClickSlot = this.hoveredSlot;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
