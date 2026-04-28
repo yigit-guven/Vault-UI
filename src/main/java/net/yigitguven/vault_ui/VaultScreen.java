@@ -361,7 +361,8 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             
             if (stack.getCount() > 1) {
                 String countText = formatCount(stack.getCount());
-                float scale = 0.8f;
+                // Scale down if count is very large (100k+) to ensure it fits the slot
+                float scale = stack.getCount() >= 100000 ? 0.65f : 0.8f;
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(0, 0, 200);
                 guiGraphics.pose().scale(scale, scale, 1.0f);
@@ -383,10 +384,12 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     private String formatCount(int count) {
         if (count >= 1000000) {
             double value = count / 1000000.0;
+            if (count >= 10000000) return String.format("%.0fM", value); // Stop decimals at 10M
             return value % 1 == 0 ? String.format("%.0fM", value) : String.format("%.1fM", value);
         }
         if (count >= 1000) {
             double value = count / 1000.0;
+            if (count >= 10000) return String.format("%.0fk", value); // Stop decimals at 10k (exceeds 9.9k)
             return value % 1 == 0 ? String.format("%.0fk", value) : String.format("%.1fk", value);
         }
         return String.valueOf(count);
