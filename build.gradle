@@ -81,7 +81,8 @@ configurations {
 dependencies {
     implementation "curse.maven:create-328085:${create_version}"
     runtimeOnly "curse.maven:create-vibrant-vaults-1251719:${vibrant_vaults_version}"
-    runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.21.0.247"
+    compileOnly "mezz.jei:jei-1.21.1-neoforge-api:19.21.0.247"
+    localRuntime "mezz.jei:jei-1.21.1-neoforge:19.21.0.247"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

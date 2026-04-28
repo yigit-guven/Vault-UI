@@ -22,16 +22,8 @@ public class CompatHelper {
         // Sync to JEI
         if (jeiLoaded) {
             try {
-                Class<?> internal = Class.forName("mezz.jei.Internal");
-                Method getRuntime = internal.getMethod("getRuntime");
-                Object runtime = getRuntime.invoke(null);
-                if (runtime != null) {
-                    Method getIngredientFilter = runtime.getClass().getMethod("getIngredientFilter");
-                    Object filter = getIngredientFilter.invoke(runtime);
-                    Method setFilterText = filter.getClass().getMethod("setFilterText", String.class);
-                    setFilterText.invoke(filter, query);
-                }
-            } catch (Exception ignored) {}
+                VaultJEIPlugin.setFilterText(query);
+            } catch (Throwable ignored) {}
         }
     }
 }
