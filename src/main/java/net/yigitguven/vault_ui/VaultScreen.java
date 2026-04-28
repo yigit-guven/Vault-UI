@@ -53,17 +53,8 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
         
-        // Sort Button
-        this.addRenderableWidget(Button.builder(Component.literal("Sort: " + menu.getSortMode().label), (btn) -> {
-            VaultMenu.SortMode next = VaultMenu.SortMode.values()[(menu.getSortMode().ordinal() + 1) % VaultMenu.SortMode.values().length];
-            menu.setSortMode(next);
-            Config.SORT_MODE.set(next);
-            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(next));
-            btn.setMessage(Component.literal("Sort: " + next.label));
-        }).pos(this.leftPos + 132, this.topPos + 4).size(70, 12).build());
-        
-        // Search Box
-        this.searchBox = new EditBox(this.font, this.leftPos + 58, this.topPos + 4, 70, 12, Component.literal("Search"));
+        // Search Box (Moved to right)
+        this.searchBox = new EditBox(this.font, this.leftPos + 115, this.topPos + 4, 70, 12, Component.literal("Search"));
         this.searchBox.setMaxLength(50);
         this.searchBox.setBordered(true);
         this.searchBox.setVisible(true);
@@ -73,6 +64,26 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSearchPayload(query));
         });
         this.addRenderableWidget(this.searchBox);
+
+        // Sort Button (Square Icon to the right of search)
+        Button sortBtn = Button.builder(getSortIcon(menu.getSortMode()), (btn) -> {
+            VaultMenu.SortMode next = VaultMenu.SortMode.values()[(menu.getSortMode().ordinal() + 1) % VaultMenu.SortMode.values().length];
+            menu.setSortMode(next);
+            Config.SORT_MODE.set(next);
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(next));
+            btn.setMessage(getSortIcon(next));
+            btn.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal("Sort: " + next.label)));
+        }).pos(this.leftPos + 189, this.topPos + 4).size(14, 12).build();
+        sortBtn.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal("Sort: " + menu.getSortMode().label)));
+        this.addRenderableWidget(sortBtn);
+    }
+
+    private Component getSortIcon(VaultMenu.SortMode mode) {
+        return switch (mode) {
+            case COUNT -> Component.literal("#");
+            case NAME -> Component.literal("A");
+            case NAME_ID -> Component.literal("M");
+        };
     }
 
     @Override
