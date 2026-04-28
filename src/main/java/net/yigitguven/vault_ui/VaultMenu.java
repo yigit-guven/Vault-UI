@@ -293,7 +293,7 @@ public class VaultMenu extends AbstractContainerMenu {
                 ItemStack withdrawn = withdrawFromVault(template, toTake);
                 if (!withdrawn.isEmpty()) {
                     if (!this.moveItemStackTo(withdrawn, 54, this.slots.size(), true)) {
-                        player.drop(withdrawn, false);
+                        insertIntoVault(withdrawn);
                     }
                 }
             }
@@ -388,7 +388,7 @@ public class VaultMenu extends AbstractContainerMenu {
                     ItemStack withdrawn = withdrawFromVault(stackInSlot, stackInSlot.getMaxStackSize());
                     if (!withdrawn.isEmpty()) {
                         if (!this.moveItemStackTo(withdrawn, 54, this.slots.size(), true)) {
-                            player.drop(withdrawn, false);
+                            insertIntoVault(withdrawn);
                         }
                     }
                     refreshServerData();
@@ -402,6 +402,23 @@ public class VaultMenu extends AbstractContainerMenu {
         
         super.clicked(slotId, button, clickType, player);
         if (!(vaultHandler instanceof ItemStackHandler)) refreshServerData();
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        if (!player.level().isClientSide) {
+            ItemStack carried = getCarried();
+            if (!carried.isEmpty()) {
+                ItemStack remaining = insertIntoVault(carried);
+                if (!remaining.isEmpty()) {
+                    if (!player.getInventory().add(remaining)) {
+                        player.drop(remaining, false);
+                    }
+                }
+                setCarried(ItemStack.EMPTY);
+            }
+        }
     }
 
     @Override
