@@ -196,7 +196,7 @@ public class CreateVaultUI {
 
                     event.getEntity().openMenu(new net.minecraft.world.SimpleMenuProvider(
                             (id1, inventory, player) -> {
-                                VaultMenu menu = new VaultMenu(id1, inventory, finalHandler);
+                                VaultMenu menu = new VaultMenu(id1, inventory, finalHandler, event.getPos());
                                 if (finalColor != null) menu.setVaultColor(finalColor);
                                 return menu;
                             },

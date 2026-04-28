@@ -12,6 +12,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class VaultMenu extends AbstractContainerMenu {
     private final IItemHandler vaultHandler;
@@ -20,6 +21,7 @@ public class VaultMenu extends AbstractContainerMenu {
     private List<ItemStack> filteredStacks = new ArrayList<>();
     private int currentPage = 0;
     private final int slotsPerPage = 54;
+    private final net.minecraft.core.BlockPos controllerPos;
 
     private final Player player;
     private int totalCount = 0;
@@ -32,9 +34,12 @@ public class VaultMenu extends AbstractContainerMenu {
     private SortMode sortMode = Config.SORT_MODE != null ? Config.SORT_MODE.get() : SortMode.COUNT;
     private int tickCount = 0;
     private String vaultColor = null;
+    private final java.util.Map<ItemKey, Long> lastEditedTimes = new java.util.HashMap<>();
+    private final java.util.Map<ItemKey, Long> previousTotals = new java.util.HashMap<>();
 
     public enum SortMode {
         COUNT("Most Items"),
+        LAST_EDITED("Last Edited"),
         NAME_ID("A-Z (Mod ID)"),
         NAME("A-Z");
 
@@ -44,18 +49,25 @@ public class VaultMenu extends AbstractContainerMenu {
 
     // Client constructor
     public VaultMenu(int containerId, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf data) {
-        this(containerId, playerInventory, new ItemStackHandler(54));
+        this(containerId, playerInventory, new ItemStackHandler(54), net.minecraft.core.BlockPos.ZERO);
         int slots = data.readInt();
         if (data.readBoolean()) {
             this.vaultColor = data.readUtf();
         }
     }
 
-    // Server constructor
+    // Default Server constructor
     public VaultMenu(int containerId, Inventory playerInventory, IItemHandler vaultHandler) {
+        this(containerId, playerInventory, vaultHandler, net.minecraft.core.BlockPos.ZERO);
+    }
+
+    // Master constructor
+    public VaultMenu(int containerId, Inventory playerInventory, IItemHandler vaultHandler, net.minecraft.core.BlockPos pos) {
         super(CreateVaultUI.VAULT_MENU.get(), containerId);
         this.vaultHandler = vaultHandler;
         this.player = playerInventory.player;
+        this.controllerPos = pos;
+        this.currentPage = 0;
 
         // Vault Slots (9x6)
         for (int row = 0; row < 6; row++) {
@@ -82,8 +94,13 @@ public class VaultMenu extends AbstractContainerMenu {
     }
 
     // Called on Client via Packet
-    public void receiveSync(List<ItemStack> items, VaultSyncPayload.VaultStats stats) {
-        this.consolidatedStacks = new ArrayList<>(items);
+    public void receiveSync(List<VaultSyncPayload.ItemTimestamp> items, VaultSyncPayload.VaultStats stats) {
+        this.consolidatedStacks = new ArrayList<>();
+        this.lastEditedTimes.clear();
+        for (VaultSyncPayload.ItemTimestamp ts : items) {
+            this.consolidatedStacks.add(ts.item());
+            this.lastEditedTimes.put(new ItemKey(ts.item()), ts.time());
+        }
         this.totalCount = stats.barProgress();
         this.capacity = stats.barMax();
         this.rawTotal = stats.rawTotal();
@@ -96,20 +113,24 @@ public class VaultMenu extends AbstractContainerMenu {
     }
 
     private void resort() {
-        java.util.Comparator<ItemStack> comparator = null;
-        switch (sortMode) {
-            case COUNT -> comparator = (a, b) -> Integer.compare(b.getCount(), a.getCount());
-            case NAME_ID -> comparator = (a, b) -> {
+        java.util.Comparator<ItemStack> comparator = switch (sortMode) {
+            case COUNT ->
+                java.util.Comparator.comparingInt(ItemStack::getCount).reversed()
+                .thenComparing(s -> s.getHoverName().getString());
+            case LAST_EDITED ->
+                java.util.Comparator.comparingLong((ItemStack s) -> lastEditedTimes.getOrDefault(new ItemKey(s), 0L)).reversed()
+                .thenComparing(s -> s.getHoverName().getString());
+            case NAME_ID -> (a, b) -> {
                 String idA = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(a.getItem()).toString();
                 String idB = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(b.getItem()).toString();
                 return idA.compareToIgnoreCase(idB);
             };
-            case NAME -> comparator = (a, b) -> {
+            case NAME -> (a, b) -> {
                 String nameA = a.getHoverName().getString();
                 String nameB = b.getHoverName().getString();
                 return nameA.compareToIgnoreCase(nameB);
             };
-        }
+        };
         if (comparator != null) {
             consolidatedStacks.sort(comparator);
             filteredStacks.sort(comparator);
@@ -170,17 +191,40 @@ public class VaultMenu extends AbstractContainerMenu {
         this.rawCapacity = currentCapacity;
         this.occupiedSlots = occupiedSlots;
         this.totalSlots = totalSlots;
-        
-        if (consolidatedStacks.isEmpty()) {
-            // First load or empty: perform full sort
+
+        // Track external changes (Hoppers, Pipes, etc.)
+        if (!player.level().isClientSide && !controllerPos.equals(net.minecraft.core.BlockPos.ZERO)) {
+            for (var entry : totals.entrySet()) {
+                long prev = previousTotals.getOrDefault(entry.getKey(), 0L);
+                if (prev != entry.getValue()) {
+                    VaultSortData.get(player.level()).updateTimestamp(controllerPos, entry.getKey().stack());
+                }
+            }
+            for (var key : previousTotals.keySet()) {
+                if (!totals.containsKey(key)) {
+                    VaultSortData.get(player.level()).updateTimestamp(controllerPos, key.stack());
+                }
+            }
+            previousTotals.clear();
+            previousTotals.putAll(totals);
+        }
+        if (consolidatedStacks.isEmpty() || sortMode == SortMode.LAST_EDITED) {
+            // First load or LAST_EDITED: perform full sort/rebuild
+            consolidatedStacks.clear();
             for (var entry : totals.entrySet()) {
                 ItemStack stack = entry.getKey().stack.copy();
                 stack.setCount((int) Math.min(Integer.MAX_VALUE, entry.getValue()));
                 consolidatedStacks.add(stack);
             }
+            // Sync timestamps for server-side sorting
+            if (!player.level().isClientSide) {
+                lastEditedTimes.clear();
+                lastEditedTimes.putAll(VaultSortData.get(player.level()).getTimestamps(controllerPos));
+            }
+            applySearchFilter();
             resort();
         } else {
-            // Stable update: update counts in place, append new items to the end
+            // Stable update for other modes: update counts in place, append new items to the end
             java.util.Set<ItemKey> seenKeys = new java.util.HashSet<>();
             
             // 1. Update existing
@@ -192,7 +236,7 @@ public class VaultMenu extends AbstractContainerMenu {
                 seenKeys.add(key);
             }
             
-            // 2. Add new items to the end (prevents jumping)
+            // 2. Add new items to the end (prevents jumping in COUNT/NAME mode)
             for (var entry : totals.entrySet()) {
                 if (!seenKeys.contains(entry.getKey())) {
                     ItemStack newStack = entry.getKey().stack.copy();
@@ -201,10 +245,14 @@ public class VaultMenu extends AbstractContainerMenu {
                 }
             }
             
-            // 3. Optional: Remove items that are completely gone?
-            // Actually, keeping them with count 0 until close might be safer for mapping, 
-            // but let's just let them stay or be removed if they are at the end.
             consolidatedStacks.removeIf(s -> s.getCount() <= 0);
+            
+            // Sync timestamps for server-side sorting
+            if (!player.level().isClientSide) {
+                lastEditedTimes.clear();
+                lastEditedTimes.putAll(VaultSortData.get(player.level()).getTimestamps(controllerPos));
+            }
+
             applySearchFilter();
             resort();
         }
@@ -213,8 +261,17 @@ public class VaultMenu extends AbstractContainerMenu {
         
         // Sync to client
         if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            List<VaultSyncPayload.ItemTimestamp> itemsWithTime = new ArrayList<>();
+            VaultSortData data = VaultSortData.get(player.level());
+            Map<ItemKey, Long> timestamps = data.getTimestamps(controllerPos);
+            
+            for (ItemStack stack : consolidatedStacks) {
+                long time = timestamps.getOrDefault(new ItemKey(stack), 0L);
+                itemsWithTime.add(new VaultSyncPayload.ItemTimestamp(stack, time));
+            }
+
             VaultSyncPayload.VaultStats stats = new VaultSyncPayload.VaultStats(totalCount, capacity, rawTotal, rawCapacity, occupiedSlots, totalSlots);
-            PacketDistributor.sendToPlayer(serverPlayer, new VaultSyncPayload(new ArrayList<>(consolidatedStacks), stats));
+            PacketDistributor.sendToPlayer(serverPlayer, new VaultSyncPayload(itemsWithTime, stats));
         }
     }
 
@@ -301,6 +358,9 @@ public class VaultMenu extends AbstractContainerMenu {
             Slot slot = this.slots.get(index);
             if (slot != null && slot.hasItem()) {
                 ItemStack stack = slot.getItem();
+                if (!player.level().isClientSide && !controllerPos.equals(net.minecraft.core.BlockPos.ZERO)) {
+                    VaultSortData.get(player.level()).updateTimestamp(controllerPos, stack);
+                }
                 ItemStack remaining = ItemHandlerHelper.insertItemStacked(vaultHandler, stack.copy(), false);
                 slot.set(remaining);
             }
@@ -335,12 +395,20 @@ public class VaultMenu extends AbstractContainerMenu {
 
     private ItemStack insertIntoVault(ItemStack stack) {
         if (stack.isEmpty()) return stack;
+        if (!player.level().isClientSide && !controllerPos.equals(net.minecraft.core.BlockPos.ZERO)) {
+            VaultSortData.get(player.level()).updateTimestamp(controllerPos, stack);
+        }
         return ItemHandlerHelper.insertItemStacked(vaultHandler, stack, false);
     }
 
     private ItemStack withdrawFromVault(ItemStack template, int amount) {
         ItemStack result = ItemStack.EMPTY;
         int remaining = amount;
+        
+        if (!player.level().isClientSide && !controllerPos.equals(net.minecraft.core.BlockPos.ZERO)) {
+            VaultSortData.get(player.level()).updateTimestamp(controllerPos, template);
+        }
+
         for (int i = 0; i < vaultHandler.getSlots(); i++) {
             ItemStack inSlot = vaultHandler.getStackInSlot(i);
             if (ItemStack.isSameItemSameComponents(inSlot, template)) {
@@ -429,7 +497,7 @@ public class VaultMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) { return true; }
 
-    private static record ItemKey(ItemStack stack) {
+    public static record ItemKey(ItemStack stack) {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;

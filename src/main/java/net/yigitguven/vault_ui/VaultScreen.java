@@ -90,6 +90,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     private Component getSortIcon(VaultMenu.SortMode mode) {
         return switch (mode) {
             case COUNT -> Component.literal("#");
+            case LAST_EDITED -> Component.literal("E");
             case NAME -> Component.literal("A");
             case NAME_ID -> Component.literal("M");
         };
