@@ -361,8 +361,10 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             
             if (stack.getCount() > 1) {
                 String countText = formatCount(stack.getCount());
-                // Scale down if count is very large (100k+) to ensure it fits the slot
-                float scale = stack.getCount() >= 100000 ? 0.65f : 0.8f;
+                // Scale down if count text is 4 or more characters (excluding dots) to ensure it fits the slot
+                int visibleChars = countText.replace(".", "").length();
+                float scale = visibleChars >= 4 ? 0.65f : 0.8f;
+                
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(0, 0, 200);
                 guiGraphics.pose().scale(scale, scale, 1.0f);
