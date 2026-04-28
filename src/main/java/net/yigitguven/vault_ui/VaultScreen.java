@@ -94,6 +94,22 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         int bgColor = darkMode ? 0xFF181818 : 0xFFC6C6C6;
         int outlineColor = darkMode ? 0xFF555555 : 0xFF333333;
         int gridBgColor = darkMode ? 0xFF0F0F0F : 0xFF8B8B8B;
+
+        // Vibrant Vaults Color Logic
+        String vaultColorName = this.menu.getVaultColor();
+        if (Config.VIBRANT_COLORS.get() && vaultColorName != null) {
+            int vColor = getVibrantColor(vaultColorName);
+            if (darkMode) {
+                // Brighter dark mode tint (0x66 = 40% brightness)
+                bgColor = 0xFF000000 | multiplyColors(vColor, 0x666666);
+                outlineColor = 0xFF000000 | vColor;
+                gridBgColor = 0xFF000000 | multiplyColors(vColor, 0x444444);
+            } else {
+                // Softer white in light mode
+                bgColor = vaultColorName.equals("white") ? 0xFFF0F0F0 : (0xFF000000 | vColor);
+                gridBgColor = 0xFF000000 | multiplyColors(vColor, 0x999999);
+            }
+        }
         
         // Main Panel (Sharp Vanilla Style)
         guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, bgColor);
@@ -301,5 +317,34 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             return value % 1 == 0 ? String.format("%.0fk", value) : String.format("%.1fk", value);
         }
         return String.valueOf(count);
+    }
+    private int getVibrantColor(String name) {
+        return switch (name.toLowerCase()) {
+            case "white" -> 0xFFFFFF;
+            case "orange" -> 0xF9801D;
+            case "magenta" -> 0xC74EBD;
+            case "light_blue" -> 0x3AB3DA;
+            case "yellow" -> 0xFED83D;
+            case "lime" -> 0x80C71F;
+            case "pink" -> 0xF38BAA;
+            case "gray" -> 0x474F52;
+            case "light_gray" -> 0x9D9D97;
+            case "cyan" -> 0x169C9C;
+            case "purple" -> 0x8932B8;
+            case "blue" -> 0x3C44AA;
+            case "brown" -> 0x835432;
+            case "green" -> 0x5E7C16;
+            case "red" -> 0xB02E26;
+            case "black" -> 0x1D1D21;
+            default -> 0xC6C6C6;
+        };
+    }
+
+    private int multiplyColors(int color, int factor) {
+        int r = (color >> 16) & 0xFF;
+        int g = (color >> 8) & 0xFF;
+        int b = color & 0xFF;
+        float f = (factor & 0xFF) / 255.0f;
+        return ((int)(r * f) << 16) | ((int)(g * f) << 8) | (int)(b * f);
     }
 }

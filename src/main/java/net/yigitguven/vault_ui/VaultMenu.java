@@ -29,6 +29,7 @@ public class VaultMenu extends AbstractContainerMenu {
     private int totalSlots = 0;
     private SortMode sortMode = Config.SORT_MODE != null ? Config.SORT_MODE.get() : SortMode.COUNT;
     private int tickCount = 0;
+    private String vaultColor = null;
 
     public enum SortMode {
         COUNT("Most Items"),
@@ -42,6 +43,10 @@ public class VaultMenu extends AbstractContainerMenu {
     // Client constructor
     public VaultMenu(int containerId, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf data) {
         this(containerId, playerInventory, new ItemStackHandler(54));
+        int slots = data.readInt();
+        if (data.readBoolean()) {
+            this.vaultColor = data.readUtf();
+        }
     }
 
     // Server constructor
@@ -245,6 +250,8 @@ public class VaultMenu extends AbstractContainerMenu {
     public long getRawCapacity() { return rawCapacity; }
     public int getOccupiedSlots() { return occupiedSlots; }
     public int getTotalSlots() { return totalSlots; }
+    public String getVaultColor() { return vaultColor; }
+    public void setVaultColor(String color) { this.vaultColor = color; }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {

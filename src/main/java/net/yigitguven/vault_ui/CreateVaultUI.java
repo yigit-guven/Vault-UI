@@ -152,10 +152,50 @@ public class CreateVaultUI {
                 if (handler != null) {
                     LOGGER.info("Vault capability found, opening menu for {}", event.getEntity().getName().getString());
                     final net.neoforged.neoforge.items.IItemHandler finalHandler = handler;
+                    
+                    // Extract color from vibrant_vaults
+                    String color = null;
+                    if (id.getNamespace().contains("vibrant_vaults") || id.getNamespace().contains("vibrantvaults")) {
+                        String path = id.getPath();
+                        // Handle patterns like "white_vault", "blue_shipping_container", "light_blue_vault"
+                        String[] parts = path.split("_");
+                        if (parts.length > 0) {
+                            String colorCandidate = parts[0].toLowerCase();
+                            // Handle "light_blue" and "light_gray"
+                            if (colorCandidate.equals("light") && parts.length > 1) {
+                                String secondPart = parts[1].toLowerCase();
+                                if (secondPart.equals("blue") || secondPart.equals("gray")) {
+                                    colorCandidate = "light_" + secondPart;
+                                }
+                            }
+
+                            java.util.List<String> validColors = java.util.Arrays.asList(
+                                "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", 
+                                "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"
+                            );
+                            if (validColors.contains(colorCandidate)) {
+                                color = colorCandidate;
+                            }
+                        }
+                    }
+                    final String finalColor = color;
+
                     event.getEntity().openMenu(new net.minecraft.world.SimpleMenuProvider(
-                            (id1, inventory, player) -> new VaultMenu(id1, inventory, finalHandler),
+                            (id1, inventory, player) -> {
+                                VaultMenu menu = new VaultMenu(id1, inventory, finalHandler);
+                                if (finalColor != null) menu.setVaultColor(finalColor);
+                                return menu;
+                            },
                             state.getBlock().getName()
-                    ), buf -> buf.writeInt(finalHandler.getSlots()));
+                    ), buf -> {
+                        buf.writeInt(finalHandler.getSlots());
+                        if (finalColor != null) {
+                            buf.writeBoolean(true);
+                            buf.writeUtf(finalColor);
+                        } else {
+                            buf.writeBoolean(false);
+                        }
+                    });
                     event.setCancellationResult(InteractionResult.SUCCESS);
                     event.setCanceled(true);
                 }

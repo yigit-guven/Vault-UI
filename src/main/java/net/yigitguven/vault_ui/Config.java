@@ -14,6 +14,11 @@ public class Config {
             .comment("The default sort mode for the Vault UI.")
             .translation("vault_ui.config.sortMode")
             .defineEnum("sortMode", VaultMenu.SortMode.COUNT);
+
+    public static final ModConfigSpec.BooleanValue VIBRANT_COLORS = BUILDER
+            .comment("Whether to use colors from Create: Vibrant Vaults in the UI.")
+            .translation("vault_ui.config.vibrantColors")
+            .define("vibrantColors", true);
     
     public static final ModConfigSpec SPEC = BUILDER.build();
 }
