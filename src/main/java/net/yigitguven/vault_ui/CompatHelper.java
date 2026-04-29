@@ -1,6 +1,6 @@
 package net.yigitguven.vault_ui;
 
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 import java.lang.reflect.Method;
 
 public class CompatHelper {

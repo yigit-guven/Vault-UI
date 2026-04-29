@@ -11,7 +11,7 @@ public class VaultJEIPlugin implements IModPlugin {
 
     @Override
     public ResourceLocation getPluginUid() {
-        return ResourceLocation.fromNamespaceAndPath(CreateVaultUI.MODID, "jei_plugin");
+        return new ResourceLocation(CreateVaultUI.MODID, "jei_plugin");
     }
 
     @Override

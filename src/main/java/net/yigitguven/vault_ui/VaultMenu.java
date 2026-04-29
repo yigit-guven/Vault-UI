@@ -5,10 +5,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.items.SlotItemHandler;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +50,7 @@ public class VaultMenu extends AbstractContainerMenu {
 
     // Client constructor
     public VaultMenu(int containerId, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf data) {
-        this(containerId, playerInventory, new ItemStackHandler(54), net.minecraft.core.BlockPos.ZERO);
-        int slots = data.readInt();
+        this(containerId, playerInventory, new ItemStackHandler(data.readInt()), net.minecraft.core.BlockPos.ZERO);
         if (data.readBoolean()) {
             this.vaultColor = data.readUtf();
         }
@@ -72,7 +72,7 @@ public class VaultMenu extends AbstractContainerMenu {
         // Vault Slots (9x6)
         for (int row = 0; row < 6; row++) {
             for (int col = 0; col < 9; col++) {
-                this.addSlot(new net.neoforged.neoforge.items.SlotItemHandler(dummyHandler, col + row * 9, 8 + col * 18, 18 + row * 18));
+                this.addSlot(new SlotItemHandler(dummyHandler, col + row * 9, 8 + col * 18, 18 + row * 18));
             }
         }
 
@@ -93,20 +93,28 @@ public class VaultMenu extends AbstractContainerMenu {
         }
     }
 
-    // Called on Client via Packet
-    public void receiveSync(List<VaultSyncPayload.ItemTimestamp> items, VaultSyncPayload.VaultStats stats) {
+    public void receiveSync(VaultMenu.SortMode sortMode, boolean ascending, ItemStack[] items) {
+        this.consolidatedStacks = new ArrayList<>(List.of(items));
+        // Note: For now we just use the order provided by server for simplicity
+        applySearchFilter();
+        resort();
+        updateDummyHandler();
+    }
+    
+    // Compatibility with PacketSync
+    public void receiveSync(ItemStack[] items, long[] times, int[] stats) {
         this.consolidatedStacks = new ArrayList<>();
         this.lastEditedTimes.clear();
-        for (VaultSyncPayload.ItemTimestamp ts : items) {
-            this.consolidatedStacks.add(ts.item());
-            this.lastEditedTimes.put(new ItemKey(ts.item()), ts.time());
+        for (int i = 0; i < items.length; i++) {
+            this.consolidatedStacks.add(items[i]);
+            this.lastEditedTimes.put(new ItemKey(items[i]), times[i]);
         }
-        this.totalCount = stats.barProgress();
-        this.capacity = stats.barMax();
-        this.rawTotal = stats.rawTotal();
-        this.rawCapacity = stats.rawCapacity();
-        this.occupiedSlots = stats.occupiedSlots();
-        this.totalSlots = stats.totalSlots();
+        this.totalCount = stats[0];
+        this.capacity = stats[1];
+        this.rawTotal = (long)stats[2];
+        this.rawCapacity = (long)stats[3];
+        this.occupiedSlots = stats[4];
+        this.totalSlots = stats[5];
         applySearchFilter();
         resort();
         updateDummyHandler();
@@ -166,33 +174,18 @@ public class VaultMenu extends AbstractContainerMenu {
                 currentTotal += stack.getCount();
                 occupiedSlots++;
                 
-                // Dynamic Slot Fullness: How much more of THIS item can fit in THIS slot?
-                ItemStack testStack = stack.copy();
-                testStack.setCount(limit); // Try to fill the slot completely
-                ItemStack remaining = vaultHandler.insertItem(i, testStack, true);
-                int spaceLeft = limit - remaining.getCount();
-                
-                if (spaceLeft <= 0) {
-                    totalFullnessRatio += 1.0;
-                } else {
-                    totalFullnessRatio += (double) stack.getCount() / (stack.getCount() + spaceLeft);
-                }
+                totalFullnessRatio += (double) stack.getCount() / limit;
             }
         }
         
         double combinedRatio = totalSlots > 0 ? totalFullnessRatio / totalSlots : 0;
-        
-        // Scale totalCount to represent this ratio for the UI bar
         this.totalCount = (int) Math.round(combinedRatio * 10000);
         this.capacity = 10000;
-        
-        // Keep track of the raw counts for the tooltip
         this.rawTotal = currentTotal;
         this.rawCapacity = currentCapacity;
         this.occupiedSlots = occupiedSlots;
         this.totalSlots = totalSlots;
 
-        // Track external changes (Hoppers, Pipes, etc.)
         if (!player.level().isClientSide && !controllerPos.equals(net.minecraft.core.BlockPos.ZERO)) {
             for (var entry : totals.entrySet()) {
                 long prev = previousTotals.getOrDefault(entry.getKey(), 0L);
@@ -208,70 +201,37 @@ public class VaultMenu extends AbstractContainerMenu {
             previousTotals.clear();
             previousTotals.putAll(totals);
         }
-        if (consolidatedStacks.isEmpty() || sortMode == SortMode.LAST_EDITED) {
-            // First load or LAST_EDITED: perform full sort/rebuild
-            consolidatedStacks.clear();
-            for (var entry : totals.entrySet()) {
-                ItemStack stack = entry.getKey().stack.copy();
-                stack.setCount((int) Math.min(Integer.MAX_VALUE, entry.getValue()));
-                consolidatedStacks.add(stack);
-            }
-            // Sync timestamps for server-side sorting
-            if (!player.level().isClientSide) {
-                lastEditedTimes.clear();
-                lastEditedTimes.putAll(VaultSortData.get(player.level()).getTimestamps(controllerPos));
-            }
-            applySearchFilter();
-            resort();
-        } else {
-            // Stable update for other modes: update counts in place, append new items to the end
-            java.util.Set<ItemKey> seenKeys = new java.util.HashSet<>();
-            
-            // 1. Update existing
-            for (int i = 0; i < consolidatedStacks.size(); i++) {
-                ItemStack stack = consolidatedStacks.get(i);
-                ItemKey key = new ItemKey(stack);
-                long count = totals.getOrDefault(key, 0L);
-                stack.setCount((int) Math.min(Integer.MAX_VALUE, count));
-                seenKeys.add(key);
-            }
-            
-            // 2. Add new items to the end (prevents jumping in COUNT/NAME mode)
-            for (var entry : totals.entrySet()) {
-                if (!seenKeys.contains(entry.getKey())) {
-                    ItemStack newStack = entry.getKey().stack.copy();
-                    newStack.setCount((int) Math.min(Integer.MAX_VALUE, entry.getValue()));
-                    consolidatedStacks.add(newStack);
-                }
-            }
-            
-            consolidatedStacks.removeIf(s -> s.getCount() <= 0);
-            
-            // Sync timestamps for server-side sorting
-            if (!player.level().isClientSide) {
-                lastEditedTimes.clear();
-                lastEditedTimes.putAll(VaultSortData.get(player.level()).getTimestamps(controllerPos));
-            }
 
-            applySearchFilter();
-            resort();
+        consolidatedStacks.clear();
+        for (var entry : totals.entrySet()) {
+            ItemStack stack = entry.getKey().stack.copy();
+            stack.setCount((int) Math.min(Integer.MAX_VALUE, entry.getValue()));
+            consolidatedStacks.add(stack);
         }
-        
+
+        if (!player.level().isClientSide) {
+            lastEditedTimes.clear();
+            lastEditedTimes.putAll(VaultSortData.get(player.level()).getTimestamps(controllerPos));
+        }
+
+        applySearchFilter();
+        resort();
         updateDummyHandler();
         
         // Sync to client
         if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-            List<VaultSyncPayload.ItemTimestamp> itemsWithTime = new ArrayList<>();
+            ItemStack[] items = new ItemStack[consolidatedStacks.size()];
+            long[] times = new long[consolidatedStacks.size()];
             VaultSortData data = VaultSortData.get(player.level());
             Map<ItemKey, Long> timestamps = data.getTimestamps(controllerPos);
             
-            for (ItemStack stack : consolidatedStacks) {
-                long time = timestamps.getOrDefault(new ItemKey(stack), 0L);
-                itemsWithTime.add(new VaultSyncPayload.ItemTimestamp(stack, time));
+            for (int i = 0; i < consolidatedStacks.size(); i++) {
+                items[i] = consolidatedStacks.get(i);
+                times[i] = timestamps.getOrDefault(new ItemKey(items[i]), 0L);
             }
 
-            VaultSyncPayload.VaultStats stats = new VaultSyncPayload.VaultStats(totalCount, capacity, rawTotal, rawCapacity, occupiedSlots, totalSlots);
-            PacketDistributor.sendToPlayer(serverPlayer, new VaultSyncPayload(itemsWithTime, stats));
+            int[] stats = {totalCount, capacity, (int)rawTotal, (int)rawCapacity, occupiedSlots, totalSlots};
+            VaultNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new VaultNetwork.VaultSyncPacket(sortMode, true, items));
         }
     }
 
@@ -411,7 +371,7 @@ public class VaultMenu extends AbstractContainerMenu {
 
         for (int i = 0; i < vaultHandler.getSlots(); i++) {
             ItemStack inSlot = vaultHandler.getStackInSlot(i);
-            if (ItemStack.isSameItemSameComponents(inSlot, template)) {
+            if (ItemStack.isSameItemSameTags(inSlot, template)) {
                 ItemStack taken = vaultHandler.extractItem(i, remaining, false);
                 if (!taken.isEmpty()) {
                     if (result.isEmpty()) result = taken.copy();
@@ -503,13 +463,12 @@ public class VaultMenu extends AbstractContainerMenu {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             ItemKey itemKey = (ItemKey) o;
-            return ItemStack.isSameItemSameComponents(stack, itemKey.stack);
+            return ItemStack.isSameItemSameTags(stack, itemKey.stack);
         }
         @Override
         public int hashCode() {
             int result = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).hashCode();
-            var components = stack.getComponents();
-            if (components != null) result = 31 * result + components.hashCode();
+            if (stack.getTag() != null) result = 31 * result + stack.getTag().hashCode();
             return result;
         }
     }

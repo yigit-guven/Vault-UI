@@ -7,13 +7,17 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.Slot;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     private Button prevButton;
     private Button nextButton;
     private EditBox searchBox;
     private long lastClickTime;
-    private net.minecraft.world.inventory.Slot lastClickSlot;
+    private Slot lastClickSlot;
 
     public VaultScreen(VaultMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -26,10 +30,9 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     protected void init() {
         super.init();
         
-        // Sync current config preference to server immediately on open
         VaultMenu.SortMode currentSort = Config.SORT_MODE.get();
         this.menu.setSortMode(currentSort);
-        net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(currentSort));
+        VaultNetwork.CHANNEL.sendToServer(new VaultNetwork.VaultSortPacket(currentSort));
 
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
@@ -38,7 +41,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             int page = this.menu.getCurrentPage() - 1;
             if (page >= 0) {
                 this.menu.setPage(page);
-                net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultPagePayload(page));
+                VaultNetwork.CHANNEL.sendToServer(new VaultNetwork.VaultPagePacket(page));
             }
         }).bounds(x + 177, y + 17, 25, 20).build();
 
@@ -46,14 +49,13 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             int page = this.menu.getCurrentPage() + 1;
             if (page < this.menu.getMaxPages()) {
                 this.menu.setPage(page);
-                net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultPagePayload(page));
+                VaultNetwork.CHANNEL.sendToServer(new VaultNetwork.VaultPagePacket(page));
             }
         }).bounds(x + 177, y + 42, 25, 20).build();
 
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
         
-        // Search Box (Moved to right, aligned with below elements)
         this.searchBox = new EditBox(this.font, this.leftPos + 117, this.topPos + 4, 70, 12, Component.literal("Search"));
         this.searchBox.setMaxLength(50);
         this.searchBox.setBordered(true);
@@ -61,24 +63,22 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         this.searchBox.setTextColor(16777215);
         this.searchBox.setResponder(query -> {
             menu.setSearchQuery(query);
-            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSearchPayload(query));
+            VaultNetwork.CHANNEL.sendToServer(new VaultNetwork.VaultSearchPacket(query));
             CompatHelper.syncSearch(query);
         });
         this.addRenderableWidget(this.searchBox);
 
-        // Sort Button (Square Icon, aligned to x+202 right edge)
         Button sortBtn = Button.builder(getSortIcon(menu.getSortMode()), (btn) -> {
             VaultMenu.SortMode next = VaultMenu.SortMode.values()[(menu.getSortMode().ordinal() + 1) % VaultMenu.SortMode.values().length];
             menu.setSortMode(next);
             Config.SORT_MODE.set(next);
-            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultSortPayload(next));
+            VaultNetwork.CHANNEL.sendToServer(new VaultNetwork.VaultSortPacket(next));
             btn.setMessage(getSortIcon(next));
             btn.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal("Sort: " + next.label)));
-        }).pos(this.leftPos + 188, this.topPos + 4).size(14, 12).build();
+        }).bounds(this.leftPos + 188, this.topPos + 4, 14, 12).build();
         sortBtn.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal("Sort: " + menu.getSortMode().label)));
         this.addRenderableWidget(sortBtn);
 
-        // Initialize from JEI/EMI
         if (Config.JEI_SYNC.get()) {
             String syncQuery = CompatHelper.getSyncSearch();
             if (syncQuery != null && !syncQuery.isEmpty()) {
@@ -103,11 +103,9 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
                 this.searchBox.setFocused(false);
                 return true;
             }
-            // Let the search box handle other keys, prevent inventory key from closing GUI
             if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
             }
-            // If the key pressed matches the inventory close key, block it from closing the UI
             if (this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
                 return true;
             }
@@ -120,7 +118,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         if (this.hoveredSlot != null && this.hoveredSlot.index < 54 && hasShiftDown() && button == 0 && !this.menu.getCarried().isEmpty()) {
             long time = net.minecraft.Util.getMillis();
             if (time - this.lastClickTime < 250L && this.lastClickSlot == this.hoveredSlot) {
-                net.neoforged.neoforge.network.PacketDistributor.sendToServer(new VaultTakeAllPayload(this.hoveredSlot.index));
+                VaultNetwork.CHANNEL.sendToServer(new VaultNetwork.VaultTakeAllPacket(this.hoveredSlot.index));
                 return true;
             }
             this.lastClickTime = time;
@@ -136,7 +134,6 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             String syncQuery = CompatHelper.getSyncSearch();
             if (syncQuery != null && !syncQuery.equals(this.searchBox.getValue()) && !this.searchBox.isFocused()) {
                 this.searchBox.setValue(syncQuery);
-                // The responder will handle updating the menu and server
             }
         }
     }
@@ -156,49 +153,39 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         int y = (this.height - this.imageHeight) / 2;
         boolean darkMode = Config.DARK_MODE.get();
         
-        // Background Colors
         int bgColor = darkMode ? 0xFF181818 : 0xFFC6C6C6;
         int outlineColor = darkMode ? 0xFF555555 : 0xFF333333;
         int gridBgColor = darkMode ? 0xFF0F0F0F : 0xFF8B8B8B;
 
-        // Vibrant Vaults Color Logic
         String vaultColorName = this.menu.getVaultColor();
         if (Config.VIBRANT_COLORS.get() && vaultColorName != null) {
             int vColor = getVibrantColor(vaultColorName);
             if (darkMode) {
-                // Brighter dark mode tint (0x66 = 40% brightness)
                 bgColor = 0xFF000000 | multiplyColors(vColor, 0x666666);
                 outlineColor = 0xFF000000 | vColor;
                 gridBgColor = 0xFF000000 | multiplyColors(vColor, 0x444444);
             } else {
-                // Softer white in light mode
                 bgColor = vaultColorName.equals("white") ? 0xFFF0F0F0 : (0xFF000000 | vColor);
                 gridBgColor = 0xFF000000 | multiplyColors(vColor, 0x999999);
             }
         }
         
-        // Main Panel (Sharp Vanilla Style)
         guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, bgColor);
         
         if (!darkMode) {
-            // Vanilla Bezel (2-pixel, Sharp)
-            // Top & Left Highlights
-            guiGraphics.fill(x, y, x + this.imageWidth, y + 1, 0xFFFFFFFF); // Outer Top
-            guiGraphics.fill(x, y, x + 1, y + this.imageHeight, 0xFFFFFFFF); // Outer Left
-            guiGraphics.fill(x + 1, y + 1, x + this.imageWidth - 1, y + 2, 0xFFFFFFFF); // Inner Top
-            guiGraphics.fill(x + 1, y + 1, x + 2, y + this.imageHeight - 1, 0xFFFFFFFF); // Inner Left
+            guiGraphics.fill(x, y, x + this.imageWidth, y + 1, 0xFFFFFFFF);
+            guiGraphics.fill(x, y, x + 1, y + this.imageHeight, 0xFFFFFFFF);
+            guiGraphics.fill(x + 1, y + 1, x + this.imageWidth - 1, y + 2, 0xFFFFFFFF);
+            guiGraphics.fill(x + 1, y + 1, x + 2, y + this.imageHeight - 1, 0xFFFFFFFF);
             
-            // Bottom & Right Shadows
-            guiGraphics.fill(x, y + this.imageHeight - 1, x + this.imageWidth, y + this.imageHeight, 0xFF000000); // Outer Bottom
-            guiGraphics.fill(x + this.imageWidth - 1, y, x + this.imageWidth, y + this.imageHeight, 0xFF000000); // Outer Right
-            guiGraphics.fill(x + 1, y + this.imageHeight - 2, x + this.imageWidth - 1, y + this.imageHeight - 1, 0xFF555555); // Inner Bottom
-            guiGraphics.fill(x + this.imageWidth - 2, y + 1, x + this.imageWidth - 1, y + this.imageHeight - 1, 0xFF555555); // Inner Right
+            guiGraphics.fill(x, y + this.imageHeight - 1, x + this.imageWidth, y + this.imageHeight, 0xFF000000);
+            guiGraphics.fill(x + this.imageWidth - 1, y, x + this.imageWidth, y + this.imageHeight, 0xFF000000);
+            guiGraphics.fill(x + 1, y + this.imageHeight - 2, x + this.imageWidth - 1, y + this.imageHeight - 1, 0xFF555555);
+            guiGraphics.fill(x + this.imageWidth - 2, y + 1, x + this.imageWidth - 1, y + this.imageHeight - 1, 0xFF555555);
         } else {
-            // Dark Mode Border (Sharp)
             guiGraphics.renderOutline(x, y, this.imageWidth, this.imageHeight, outlineColor);
         }
 
-        // Vault Grid Background
         int gridX = x + 7;
         int gridY = y + 17;
         guiGraphics.fill(gridX, gridY, gridX + 162, gridY + 108, gridBgColor);
@@ -209,7 +196,6 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             }
         }
         
-        // Player Inventory Area (Now uses bgColor to avoid division)
         int invX = x + 7;
         int invY = y + 139;
         int inventoryBg = darkMode ? gridBgColor : bgColor;
@@ -226,7 +212,6 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             drawSlot(guiGraphics, invX + 1 + col * 18, hotbarY + 1, darkMode);
         }
 
-        // Paging Info Area
         int infoX = x + 177;
         int infoY = y + 67;
         int infoBg = darkMode ? 0xFF0A0A0A : 0xFF8B8B8B;
@@ -243,13 +228,11 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         guiGraphics.drawCenteredString(this.font, pageStr, 0, 2, pageNumColor);
         guiGraphics.pose().popPose();
 
-        // Fullness Indicator Bar
         int barX = x + 177;
         int barY = y + 115;
         int barW = 25;
         int barH = 100;
         
-        // Draw Bar Background
         guiGraphics.fill(barX, barY, barX + barW, barY + barH, darkMode ? 0xFF0A0A0A : 0xFF8B8B8B);
         guiGraphics.renderOutline(barX, barY, barW, barH, outlineColor);
         
@@ -264,9 +247,8 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             guiGraphics.fill(barX + 1, barY + barH - 1 - fillH, barX + barW - 1, barY + barH - 1, color);
         }
 
-        // Hover Tooltip for Bar
         if (mouseX >= barX && mouseX < barX + barW && mouseY >= barY && mouseY < barY + barH) {
-            java.util.List<net.minecraft.network.chat.Component> tooltip = new java.util.ArrayList<>();
+            List<Component> tooltip = new ArrayList<>();
             tooltip.add(Component.literal("Vault Storage Status").withStyle(net.minecraft.ChatFormatting.GOLD));
             
             String percentStr;
@@ -327,7 +309,6 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             guiGraphics.fill(x + 16, y, x + 17, y + 17, 0xFF555555);
             guiGraphics.fill(x, y + 16, x + 17, y + 17, 0xFF555555);
         } else {
-            // Vanilla Slot (Softer)
             guiGraphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF8B8B8B);
             guiGraphics.fill(x, y, x + 16, y + 16, 0xFF8B8B8B);
             guiGraphics.fill(x - 1, y - 1, x + 16, y, 0xFF373737);
@@ -343,60 +324,53 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         int titleColor = darkMode ? 0xFFFFFF : 0x404040;
         int invColor = darkMode ? 0xAAAAAA : 0x404040;
 
-        // Truncate title if it's too long (over 100 pixels to avoid overlapping search bar)
         Component displayTitle = this.title;
         if (this.font.width(this.title) > 102) {
             String truncated = this.font.plainSubstrByWidth(this.title.getString(), 95);
             displayTitle = Component.literal(truncated + "...");
         }
 
-        guiGraphics.drawString(this.font, displayTitle, 8, 6, titleColor, darkMode);
+        guiGraphics.drawString(this.font, displayTitle, 8, 6, titleColor, false);
         guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, this.inventoryLabelY + 1, invColor, false);
-    }
 
-    @Override
-    protected void renderSlot(GuiGraphics guiGraphics, net.minecraft.world.inventory.Slot slot) {
-        if (slot.index < 54 && slot.hasItem()) {
-            ItemStack stack = slot.getItem();
-            guiGraphics.renderItem(stack, slot.x, slot.y);
-            
-            if (stack.getCount() > 1) {
-                String countText = formatCount(stack.getCount());
-                // Scale down if count text is 4 or more characters (excluding dots) to ensure it fits the slot
-                int visibleChars = countText.replace(".", "").length();
-                float scale = visibleChars >= 4 ? 0.65f : 0.8f;
-                
-                guiGraphics.pose().pushPose();
-                guiGraphics.pose().translate(0, 0, 200);
-                guiGraphics.pose().scale(scale, scale, 1.0f);
-                
-                // Position the scaled text in the bottom-right of the 16x16 slot
-                float x = (slot.x + 16) / scale - this.font.width(countText);
-                float y = (slot.y + 16) / scale - 8;
-                
-                guiGraphics.drawString(this.font, countText, (int)x, (int)y, 0xFFFFFF, true);
-                guiGraphics.pose().popPose();
+        // Custom Count Rendering
+        for (int i = 0; i < 54; i++) {
+            Slot slot = this.menu.slots.get(i);
+            if (slot.hasItem()) {
+                ItemStack stack = slot.getItem();
+                if (stack.getCount() > 1) {
+                    String countText = formatCount(stack.getCount());
+                    int visibleChars = countText.replace(".", "").length();
+                    float scale = visibleChars >= 4 ? 0.65f : 0.8f;
+                    
+                    guiGraphics.pose().pushPose();
+                    guiGraphics.pose().translate(0, 0, 200);
+                    guiGraphics.pose().scale(scale, scale, 1.0f);
+                    
+                    float x = (slot.x + 16) / scale - this.font.width(countText);
+                    float y = (slot.y + 16) / scale - 8;
+                    
+                    guiGraphics.drawString(this.font, countText, (int)x, (int)y, 0xFFFFFF, true);
+                    guiGraphics.pose().popPose();
+                }
             }
-            // Use "" instead of null to suppress the default count rendering
-            guiGraphics.renderItemDecorations(this.font, stack, slot.x, slot.y, "");
-        } else {
-            super.renderSlot(guiGraphics, slot);
         }
     }
 
     private String formatCount(int count) {
         if (count >= 1000000) {
             double value = count / 1000000.0;
-            if (count >= 10000000) return String.format("%.0fM", value); // Stop decimals at 10M
+            if (count >= 10000000) return String.format("%.0fM", value);
             return value % 1 == 0 ? String.format("%.0fM", value) : String.format("%.1fM", value);
         }
         if (count >= 1000) {
             double value = count / 1000.0;
-            if (count >= 10000) return String.format("%.0fk", value); // Stop decimals at 10k (exceeds 9.9k)
+            if (count >= 10000) return String.format("%.0fk", value);
             return value % 1 == 0 ? String.format("%.0fk", value) : String.format("%.1fk", value);
         }
         return String.valueOf(count);
     }
+    
     private int getVibrantColor(String name) {
         return switch (name.toLowerCase()) {
             case "white" -> 0xFFFFFF;

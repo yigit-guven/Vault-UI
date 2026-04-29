@@ -41,6 +41,7 @@ repo/
 logs/
 crash-reports/
 debug.log
+.mixin.out/
 
 ### Others ###
 *.log
