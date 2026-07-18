@@ -1,4 +1,4 @@
-## [1.0.0-beta8] - 2026-04-28
+## [1.0.0-beta10] - 2026-07-18
 
 ### Added
-- **Last Edited Sorting**: New sorting option 'E' that brings recently put or taken items to the first slot. This history is persistent and unique to each vault.
+- **Server Configuration**: Added server-side configuration options (`preventItemRetrieval`, `preventItemInsertion`) that only operators can modify, which prevent players from retrieving items from or inserting items into the vault interface directly.

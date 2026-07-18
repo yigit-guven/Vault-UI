@@ -395,6 +395,7 @@ public class VaultMenu extends AbstractContainerMenu {
 
     private ItemStack insertIntoVault(ItemStack stack) {
         if (stack.isEmpty()) return stack;
+        if (ServerConfig.PREVENT_ITEM_INSERTION.get()) return stack;
         if (!player.level().isClientSide && !controllerPos.equals(net.minecraft.core.BlockPos.ZERO)) {
             VaultSortData.get(player.level()).updateTimestamp(controllerPos, stack);
         }
@@ -402,6 +403,8 @@ public class VaultMenu extends AbstractContainerMenu {
     }
 
     private ItemStack withdrawFromVault(ItemStack template, int amount) {
+        if (ServerConfig.PREVENT_ITEM_RETRIEVAL.get()) return ItemStack.EMPTY;
+
         ItemStack result = ItemStack.EMPTY;
         int remaining = amount;
         
