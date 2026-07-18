@@ -152,8 +152,6 @@ public class CreateVaultUI {
             return;
         }
 
-        LOGGER.info("Vault interaction triggered by player: {} at {}", event.getEntity().getName().getString(), event.getPos());
-
         BlockState state = event.getLevel().getBlockState(event.getPos());
         ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
 
@@ -165,7 +163,6 @@ public class CreateVaultUI {
                 net.neoforged.neoforge.items.IItemHandler handler = event.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, event.getPos(), event.getFace());
 
                 if (handler != null) {
-                    LOGGER.info("Vault capability found, opening menu for {}", event.getEntity().getName().getString());
                     final net.neoforged.neoforge.items.IItemHandler finalHandler = handler;
                     
                     // Extract color from vibrant_vaults
