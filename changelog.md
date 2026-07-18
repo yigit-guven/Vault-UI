@@ -5,3 +5,4 @@
 
 ### Fixed
 - **Log Spam**: Removed debug log messages that were spamming the server console on every block interaction.
+- **Server Crash**: Fixed a server crash (`Cannot encode empty ItemStack`) that occurred when attempting to save the vault sorting data with an empty or invalid item.

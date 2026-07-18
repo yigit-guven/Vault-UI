@@ -66,9 +66,11 @@ public class VaultSortData extends SavedData {
                 CompoundTag itemTag = new CompoundTag();
                 ItemStack saveStack = itemEntry.getKey().stack().copy();
                 saveStack.setCount(1); // Crucial: avoid counts > 99 which crash ItemStack.save()
-                itemTag.put("item", saveStack.save(provider));
-                itemTag.putLong("time", itemEntry.getValue());
-                itemsList.add(itemTag);
+                if (!saveStack.isEmpty()) {
+                    itemTag.put("item", saveStack.save(provider));
+                    itemTag.putLong("time", itemEntry.getValue());
+                    itemsList.add(itemTag);
+                }
             }
             vaultTag.put("items", itemsList);
             vaultsList.add(vaultTag);
